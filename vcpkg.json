@@ -1,7 +1,7 @@
 {
-  "name": "staffenchanting",
+  "name": "enchantingextended",
   "version-string": "1.0.0",
-  "description": "SKSE Framework that allows for enchanters in Skyrim to enchant staves.",
+  "description": "SKSE Framework that allows for enchanters in Skyrim to enchant ammo and staves.",
   "homepage": "",
   "license": "MIT",
   "dependencies": [
