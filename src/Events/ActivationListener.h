@@ -18,6 +18,6 @@ namespace ActivationListener
 			RE::BSTEventSource<RE::TESFurnitureEvent>*) override;
 
 		bool isInValidStaffWorkbench{ false };
-		bool isInValidAmmoWorkbench{ false };
+		bool isInValidAmmoWorkbench{ true };
 	};
 }

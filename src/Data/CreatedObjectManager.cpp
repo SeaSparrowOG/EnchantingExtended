@@ -71,14 +71,39 @@ namespace Data
 			&CreatedObjectManager::CreateEnchantment,
 			true);
 
-		if (enchantment) {
-			enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+		if (!enchantment)
+			return enchantment;
 
-			auto* firstEffect = (*enchantment->effects.begin())->baseEffect;
-			enchantment->SetDelivery(firstEffect->data.delivery);
-			enchantment->SetCastingType(firstEffect->data.castingType);
+		//We are assuming that enchantments have a consistent delivery and casting set of effects.
+		enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+		auto* firstEffect = (*enchantment->effects.begin())->baseEffect;
+		enchantment->SetDelivery(firstEffect->data.delivery);
+		enchantment->SetCastingType(firstEffect->data.castingType);
+
+		RE::BSTArray<RE::Effect> enchantmentExplosionEffects = RE::BSTArray<RE::Effect>();
+		RE::BGSExplosion* lastExplosion = nullptr;
+		for (auto* effect : enchantment->effects) {
+			if (effect->baseEffect && effect->baseEffect->data.explosion) {
+				enchantmentExplosionEffects.push_back(*effect);
+				lastExplosion = effect->baseEffect->data.explosion;
+			}
 		}
 
+		if (enchantmentExplosionEffects.empty())
+			return enchantment;
+
+		auto explosionEnchantment = create(
+			explosionEnchantments,
+			enchantmentExplosionEffects,
+			&CreatedObjectManager::CreateEnchantment,
+			true);
+		if (!explosionEnchantment || !lastExplosion)
+			return enchantment;
+
+		auto* costliestEffect = enchantment->GetCostliestEffectItem()->baseEffect;
+		auto createdExplosion = EnchantExplosion(lastExplosion, enchantment);
+		costliestEffect->data.explosion = createdExplosion;
+		createdExplosions[enchantment] = createdExplosion;
 		return enchantment;
 	}
 

@@ -55,6 +55,7 @@ namespace Data
 
 		RE::BSTArray<EnchantmentEntry> ammoEnchantments;
 		RE::BSTArray<EnchantmentEntry> staffEnchantments;
+		RE::BSTArray<EnchantmentEntry> explosionEnchantments;
 		std::map<RE::EffectSetting*, RE::BGSExplosion*> baseExplosions;
 		std::map<RE::EnchantmentItem*, RE::BGSExplosion*> createdExplosions;
 		std::map<RE::ExtraEnchantment*, RE::FormID> failedFormLoads;

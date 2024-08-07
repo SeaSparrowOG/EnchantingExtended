@@ -47,6 +47,14 @@ namespace Hooks
 
 			return enchantment;
 		}
+		else if (const auto staff = form ? form->As<RE::TESObjectWEAP>() : nullptr; staff ? staff->IsStaff() : false) {
+			auto* enchantment = staff->formEnchanting;
+			auto* baseEnchantment = enchantment
+				? enchantment->data.baseEnchantment
+				: nullptr;
+			enchantment = baseEnchantment ? baseEnchantment : enchantment;
+			return enchantment;
+		}
 
 		return _GetEnchantment(a_entry);
 	}

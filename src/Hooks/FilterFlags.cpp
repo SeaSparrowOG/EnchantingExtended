@@ -113,9 +113,9 @@ namespace Hooks
 		auto init_addr = REL::ID(51285).address();
 		auto hook_addr = init_addr + 0x1D5;
 		auto return_addr = init_addr + 0x1F5;
-		struct Code : Xbyak::CodeGenerator
+		struct Patch : Xbyak::CodeGenerator
 		{
-			Code(uintptr_t ret_addr, uintptr_t func_call)
+			Patch(uintptr_t ret_addr, uintptr_t func_call)
 			{
 				mov(rcx, rbx);
 				mov(rax, func_call);
@@ -124,11 +124,11 @@ namespace Hooks
 				mov(rax, ret_addr);
 				jmp(rax);
 			}
-		} static code{ return_addr, (uintptr_t)EvaluateEnchantment };
+		} static patch{ return_addr, util::function_ptr(&FilterFlags::EvaluateEnchantment) };
 
 		auto& trampoline = SKSE::GetTrampoline();
 
-		trampoline.write_branch<5>(hook_addr, code.getCode());
+		trampoline.write_branch<5>(hook_addr, patch.getCode());
 	}
 
 	void FilterFlags::EffectEntryPatch()
