@@ -121,10 +121,10 @@ namespace Hooks
 				mov(rax, func_call);
 				call(rax);
 				cmp(eax, 1);
-				mov(rax, ret_addr);
-				jmp(rax);
+				mov(rsi, ret_addr);
+				jmp(rsi);
 			}
-		} static patch{ return_addr, util::function_ptr(&FilterFlags::EvaluateEnchantment) };
+		} static patch{ return_addr, (uintptr_t)EvaluateEnchantment };
 
 		auto& trampoline = SKSE::GetTrampoline();
 
@@ -465,6 +465,7 @@ namespace Hooks
 
 		auto casting_type = a_item->GetCastingType();
 		auto deliver_type = a_item->GetDelivery();
+
 		switch (casting_type)
 		{
 		case RE::MagicSystem::CastingType::kFireAndForget:
