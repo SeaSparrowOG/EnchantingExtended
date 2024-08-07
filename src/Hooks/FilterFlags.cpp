@@ -1,6 +1,7 @@
 #include "FilterFlags.h"
 
 #include "Data/CreatedObjectManager.h"
+#include "Events/ActivationListener.h"
 #include "Ext/TESAmmo.h"
 #include "RE/Offset.h"
 #include "Settings/GlobalSettings.h"
@@ -438,10 +439,12 @@ namespace Hooks
 			auto* enchantment = a_entry->data;
 			bool isStaffEnchantment = enchantment ? enchantment->GetSpellType() == RE::MagicSystem::SpellType::kStaffEnchantment : false;
 
-			if (isStaffEnchantment) {
+			if (isStaffEnchantment && ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench()) {
 				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectSpecial);
 			}
-			else if (manager->IsBaseAmmoEnchantment(a_entry->data)) {
+			else if (manager->IsBaseAmmoEnchantment(a_entry->data)
+				&& ActivationListener::EnchantingTable::GetSingleton()->IsInValidAmmoWorkbench())
+				{
 				const auto globalSettings = Settings::GlobalSettings::GetSingleton();
 				if (!globalSettings->AmmoEnchantingEnabled()) {
 					RE::free(a_entry);
@@ -457,6 +460,9 @@ namespace Hooks
 
 	bool FilterFlags::EvaluateEnchantment(RE::EnchantmentItem* a_item)
 	{
+		if (!ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench())
+			return false;
+
 		auto casting_type = a_item->GetCastingType();
 		auto deliver_type = a_item->GetDelivery();
 		switch (casting_type)
@@ -495,7 +501,37 @@ namespace Hooks
 		const auto disallowEnchanting = defaultObjects->GetObject<RE::BGSKeyword>(
 			RE::DEFAULT_OBJECT::kKeywordDisallowEnchanting);
 
-		if (const auto armor = object->As<RE::TESObjectARMO>()) {
+		const auto staff = object->As<RE::TESObjectWEAP>();
+		bool isStaffSelected = staff ? staff->IsStaff() : false;
+		bool inStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench();
+
+		if (inStaffEnchanter) {
+			if (isStaffSelected) {
+				if (!ActivationListener::EnchantingTable::GetSingleton()
+						 ->IsInValidStaffWorkbench() ||
+					(disallowEnchanting && staff->HasKeyword(disallowEnchanting))) {
+					return FilterFlag::None;
+				}
+				else if (!a_entry->IsEnchanted()) {
+					return FilterFlag::EnchantSpecial;
+				}
+				else {
+					return FilterFlag::DisenchantSpecial;
+				}
+			}
+			else if (const auto soulGem = object->As<RE::TESSoulGem>()) {
+				if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
+					return FilterFlag::None;
+				}
+				else {
+					return FilterFlag::SoulGem;
+				}
+			}
+			else {
+				return FilterFlag::None;
+			}
+		}
+		else if (const auto armor = object->As<RE::TESObjectARMO>()) {
 			if (disallowEnchanting && armor->HasKeyword(disallowEnchanting)) {
 				return FilterFlag::None;
 			}
@@ -506,23 +542,13 @@ namespace Hooks
 				return FilterFlag::DisenchantArmor;
 			}
 		}
-		else if (const auto staff = object->As<RE::TESObjectWEAP>(); staff ? staff->IsStaff() : false) {
-			if (disallowEnchanting && staff->HasKeyword(disallowEnchanting)) {
-				return FilterFlag::None;
-			}
-			else if (!a_entry->IsEnchanted()) {
-				return FilterFlag::EnchantSpecial;
-			}
-			else {
-				return FilterFlag::DisenchantSpecial;
-			}
-		}
 		else if (const auto weapon = object->As<RE::TESObjectWEAP>()) {
 			static const auto unarmedWeapon = REL::Relocation<RE::TESObjectWEAP**>{
 				RE::Offset::UnarmedWeapon
 			};
 
-			if (disallowEnchanting && weapon->HasKeyword(disallowEnchanting) ||
+			if (isStaffSelected ||
+				disallowEnchanting && weapon->HasKeyword(disallowEnchanting) ||
 				weapon == *unarmedWeapon.get() ||
 				(weapon->weaponData.flags.all(RE::TESObjectWEAP::Data::Flag::kNonPlayable))) {
 

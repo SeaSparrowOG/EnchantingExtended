@@ -2,6 +2,7 @@ set(headers ${headers}
 	include/PCH.h
 	src/Data/CreatedObjectManager.h
 	src/Data/EnchantArtManager.h
+	src/Events/ActivationListener.h
 	src/Ext/AmmoEnchantmentController.h
 	src/Ext/ArrowEffectController.h
 	src/Ext/EnchantConstructMenu.h

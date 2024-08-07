@@ -2,6 +2,7 @@ set(sources ${sources}
 	src/Data/CreatedObjectManager.Serialization.cpp
 	src/Data/CreatedObjectManager.cpp
 	src/Data/EnchantArtManager.cpp
+	src/Events/ActivationListener.cpp
 	src/Ext/AmmoEnchantmentController.cpp
 	src/Ext/ArrowEffectController.cpp
 	src/Ext/EnchantConstructMenu.cpp

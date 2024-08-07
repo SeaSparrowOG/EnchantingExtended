@@ -1,3 +1,4 @@
+#include "Events/ActivationListener.h"
 #include "Hooks/Disenchant.h"
 #include "Hooks/Enchanting.h"
 #include "Hooks/FilterFlags.h"
@@ -76,5 +77,6 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	Settings::INISettings::GetSingleton()->LoadSettings();
 
+	ActivationListener::EnchantingTable::GetSingleton()->RegisterListener();
 	return true;
 }
