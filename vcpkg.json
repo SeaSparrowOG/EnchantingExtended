@@ -1,12 +1,21 @@
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
-  "name": "ammoenchanting",
-  "version": "1",
+  "name": "staffenchanting",
+  "version-string": "1.0.0",
+  "description": "SKSE Framework that allows for enchanters in Skyrim to enchant staves.",
+  "homepage": "",
+  "license": "MIT",
   "dependencies": [
-    "boost-stl-interfaces",
     "rsm-binary-io",
     "spdlog",
-    "xbyak",
-    "simpleini"
-  ]
+    "clib-util",
+    "jsoncpp",
+    "xbyak"
+  ],
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "9.1.0"
+    }
+  ],
+  "builtin-baseline": "b7dba7f9aad09a56900f21cd78cfda1258e54e38"
 }

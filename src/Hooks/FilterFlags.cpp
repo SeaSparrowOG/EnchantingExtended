@@ -6,6 +6,8 @@
 #include "Settings/GlobalSettings.h"
 
 #define NOGDI
+#undef GetObject
+
 #include <xbyak/xbyak.h>
 
 namespace Hooks
@@ -16,6 +18,7 @@ namespace Hooks
 
 		ItemEntryPatch();
 		EffectEntryPatch();
+		EnchantmentEntryPatch();
 
 		DisenchantSelectPatch();
 		DisenchantEnablePatch();
@@ -101,6 +104,30 @@ namespace Hooks
 
 		REL::safe_fill(hook.address(), REL::NOP, 0xD0);
 		REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
+	}
+
+	void FilterFlags::EnchantmentEntryPatch()
+	{
+
+		auto init_addr = REL::ID(51285).address();
+		auto hook_addr = init_addr + 0x1D5;
+		auto return_addr = init_addr + 0x1F5;
+		struct Code : Xbyak::CodeGenerator
+		{
+			Code(uintptr_t ret_addr, uintptr_t func_call)
+			{
+				mov(rcx, rbx);
+				mov(rax, func_call);
+				call(rax);
+				cmp(eax, 1);
+				mov(rax, ret_addr);
+				jmp(rax);
+			}
+		} static code{ return_addr, (uintptr_t)EvaluateEnchantment };
+
+		auto& trampoline = SKSE::GetTrampoline();
+
+		trampoline.write_branch<5>(hook_addr, code.getCode());
 	}
 
 	void FilterFlags::EffectEntryPatch()
@@ -287,7 +314,7 @@ namespace Hooks
 			Patch()
 			{
 				// we shouldn't need an explicit check for EffectArmor
-				test(ecx, FilterFlag::EffectWeapon | FilterFlag::EffectAmmo);
+				test(ecx, FilterFlag::EffectWeapon | FilterFlag::EffectSpecial);
 				db(0x75);  // jnz hook + 0x1D
 				db(0x15);
 				nop(0x2);
@@ -335,7 +362,7 @@ namespace Hooks
 			{
 				test(
 					eax,
-					~(FilterFlag::EffectWeapon | FilterFlag::EffectAmmo | FilterFlag::SoulGem));
+					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial | FilterFlag::SoulGem));
 			}
 		};
 
@@ -351,7 +378,7 @@ namespace Hooks
 				mov(rbx, r13);
 				test(
 					dword[rbx + offsetof(Menu::CategoryListEntry, filterFlag)],
-					~(FilterFlag::EffectWeapon | FilterFlag::EffectAmmo));
+					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial));
 			}
 		};
 
@@ -402,23 +429,58 @@ namespace Hooks
 		REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
 	}
 
+	//Controller functions
+
 	void FilterFlags::PushBack(void* a_arg1, Menu::EnchantmentEntry* a_entry)
 	{
 		if (a_entry->filterFlag.underlying() == FilterFlag::EffectWeapon) {
 			const auto manager = Data::CreatedObjectManager::GetSingleton();
+			auto* enchantment = a_entry->data;
+			bool isStaffEnchantment = enchantment ? enchantment->GetSpellType() == RE::MagicSystem::SpellType::kStaffEnchantment : false;
 
-			if (manager->IsBaseAmmoEnchantment(a_entry->data)) {
+			if (isStaffEnchantment) {
+				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectSpecial);
+			}
+			else if (manager->IsBaseAmmoEnchantment(a_entry->data)) {
 				const auto globalSettings = Settings::GlobalSettings::GetSingleton();
 				if (!globalSettings->AmmoEnchantingEnabled()) {
 					RE::free(a_entry);
 					return;
 				}
 
-				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectAmmo);
+				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectSpecial);
 			}
 		}
 
 		return _PushBack(a_arg1, a_entry);
+	}
+
+	bool FilterFlags::EvaluateEnchantment(RE::EnchantmentItem* a_item)
+	{
+		auto casting_type = a_item->GetCastingType();
+		auto deliver_type = a_item->GetDelivery();
+		switch (casting_type)
+		{
+		case RE::MagicSystem::CastingType::kFireAndForget:
+		case RE::MagicSystem::CastingType::kConcentration:
+			break;
+
+		default:
+			return false;
+		}
+
+		switch (deliver_type)
+		{
+		case RE::MagicSystem::Delivery::kTouch:
+		case RE::MagicSystem::Delivery::kAimed:
+		case RE::MagicSystem::Delivery::kTargetActor:
+		case RE::MagicSystem::Delivery::kTargetLocation:
+		case RE::MagicSystem::Delivery::kSelf:
+			break;
+		default:
+			return false;
+		}
+		return true;
 	}
 
 	std::uint32_t FilterFlags::GetFilterFlag(RE::InventoryEntryData* a_entry)
@@ -444,13 +506,23 @@ namespace Hooks
 				return FilterFlag::DisenchantArmor;
 			}
 		}
+		else if (const auto staff = object->As<RE::TESObjectWEAP>(); staff ? staff->IsStaff() : false) {
+			if (disallowEnchanting && staff->HasKeyword(disallowEnchanting)) {
+				return FilterFlag::None;
+			}
+			else if (!a_entry->IsEnchanted()) {
+				return FilterFlag::EnchantSpecial;
+			}
+			else {
+				return FilterFlag::DisenchantSpecial;
+			}
+		}
 		else if (const auto weapon = object->As<RE::TESObjectWEAP>()) {
 			static const auto unarmedWeapon = REL::Relocation<RE::TESObjectWEAP**>{
 				RE::Offset::UnarmedWeapon
 			};
 
-			if (weapon->weaponData.animationType == RE::WEAPON_TYPE::kStaff ||
-				disallowEnchanting && weapon->HasKeyword(disallowEnchanting) ||
+			if (disallowEnchanting && weapon->HasKeyword(disallowEnchanting) ||
 				weapon == *unarmedWeapon.get() ||
 				(weapon->weaponData.flags.all(RE::TESObjectWEAP::Data::Flag::kNonPlayable))) {
 
@@ -471,11 +543,11 @@ namespace Hooks
 				return FilterFlag::None;
 			}
 			else if (!a_entry->IsEnchanted() && !Ext::TESAmmo::GetEnchantment(ammo)) {
-				return FilterFlag::EnchantAmmo;
+				return FilterFlag::EnchantSpecial;
 			}
 			else {
 				if (globalSettings->AmmoEnchantingAllowDisenchant()) {
-					return FilterFlag::DisenchantAmmo;
+					return FilterFlag::DisenchantSpecial;
 				}
 				else {
 					return FilterFlag::None;
@@ -508,8 +580,8 @@ namespace Hooks
 			case FilterFlag::EnchantArmor:
 				filters = FilterFlag::SoulGem | FilterFlag::EffectArmor | FilterFlag::EnchantArmor;
 				break;
-			case FilterFlag::EnchantAmmo:
-				filters = FilterFlag::SoulGem | FilterFlag::EffectAmmo | FilterFlag::EnchantAmmo;
+			case FilterFlag::EnchantSpecial:
+				filters = FilterFlag::SoulGem | FilterFlag::EffectSpecial | FilterFlag::DisenchantSpecial;
 				break;
 			}
 		}
@@ -522,8 +594,8 @@ namespace Hooks
 			case FilterFlag::EffectArmor:
 				filters |= FilterFlag::EffectArmor | FilterFlag::EnchantArmor;
 				break;
-			case FilterFlag::EffectAmmo:
-				filters |= FilterFlag::EffectAmmo | FilterFlag::EnchantAmmo;
+			case FilterFlag::EffectSpecial:
+				filters |= FilterFlag::EffectSpecial | FilterFlag::EnchantSpecial;
 				break;
 			}
 		}
@@ -547,7 +619,7 @@ namespace Hooks
 		switch (a_flag) {
 		case FilterFlag::EffectWeapon:
 			return RE::FormType::Weapon;
-		case FilterFlag::EffectAmmo:
+		case FilterFlag::EffectSpecial:
 			return RE::FormType::Ammo;
 		default:
 			return RE::FormType::Armor;

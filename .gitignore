@@ -1,1 +1,9 @@
-build*/
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/build
+/build-ng
+/build-test
+/extern/commonlibsse

@@ -15,7 +15,7 @@ namespace Translation
 			: nullptr;
 
 		if (!translator) {
-			logger::warn("Failed to get Scaleform translator"sv);
+			_loggerInfo("Failed to get Scaleform translator");
 			return false;
 		}
 

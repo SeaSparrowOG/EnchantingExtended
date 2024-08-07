@@ -126,7 +126,7 @@ namespace Hooks
 			0x1B6);
 
 		if (!REL::make_pattern<"E8">().match(hook.address())) {
-			logger::error("Enchanting::EnchantConfirmPatch failed to install"sv);
+			_loggerError("Enchanting::EnchantConfirmPatch failed to install");
 			return;
 		}
 
@@ -171,7 +171,7 @@ namespace Hooks
 			0x2A3);
 
 		if (!REL::make_pattern<"E8">().match(hook.address())) {
-			logger::error("Enchanting::InventoryNotificationPatch failed to install"sv);
+			_loggerError("Enchanting::InventoryNotificationPatch failed to install");
 			return;
 		}
 
@@ -207,17 +207,27 @@ namespace Hooks
 		_availableCount = a_menu->selected.item
 			? static_cast<std::uint16_t>(a_menu->selected.item->data->countDelta)
 			: 0;
+		
+		auto* itemChangeEntry = a_menu->selected.item.get();
+		auto* entryData = itemChangeEntry ? itemChangeEntry->data : nullptr;
+		auto* boundObject = entryData ? entryData->object : nullptr;
+		bool isStaff = boundObject && boundObject->IsWeapon() ? 
+			boundObject->As<RE::TESObjectWEAP>()->IsStaff() : false;
 
 		switch (a_formType) {
 
 		case RE::FormType::Armor:
 			_creatingCount = 1;
-			return RE::BGSCreatedObjectManager::GetSingleton()->CreateArmorEnchantment(
+			return RE::BGSCreatedObjectManager::GetSingleton()->AddArmorEnchantment(
 				a_menu->createEffectFunctor.createdEffects);
 
 		case RE::FormType::Weapon:
 			_creatingCount = 1;
-			return RE::BGSCreatedObjectManager::GetSingleton()->CreateWeaponEnchantment(
+			if (isStaff) {
+				return Data::CreatedObjectManager::GetSingleton()->CreateStaffEnchantment(
+					a_menu->createEffectFunctor.createdEffects);
+			}
+			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
 				a_menu->createEffectFunctor.createdEffects);
 
 		case RE::FormType::Ammo:

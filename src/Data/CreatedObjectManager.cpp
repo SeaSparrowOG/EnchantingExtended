@@ -50,6 +50,38 @@ namespace Data
 		return enchantment;
 	}
 
+	RE::EnchantmentItem* CreatedObjectManager::CreateStaffEnchantment(
+		const RE::BSTArray<RE::Effect>& a_effects)
+	{
+		using EnchantmentFactory = decltype(&CreatedObjectManager::CreateEnchantment);
+
+		using CreateEnchantment_t = RE::EnchantmentItem* (*)(
+			RE::BSTArray<EnchantmentEntry>&,
+			const RE::BSTArray<RE::Effect>&,
+			EnchantmentFactory,
+			bool);
+
+		static REL::Relocation<CreateEnchantment_t> create{
+			RE::Offset::BGSCreatedObjectManager::CreateEnchantment
+		};
+
+		auto enchantment = create(
+			staffEnchantments,
+			a_effects,
+			&CreatedObjectManager::CreateEnchantment,
+			true);
+
+		if (enchantment) {
+			enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+
+			auto* firstEffect = (*enchantment->effects.begin())->baseEffect;
+			enchantment->SetDelivery(firstEffect->data.delivery);
+			enchantment->SetCastingType(firstEffect->data.castingType);
+		}
+
+		return enchantment;
+	}
+
 	bool CreatedObjectManager::IsBaseAmmoEnchantment(RE::EnchantmentItem* a_enchantment) const
 	{
 		auto costliestEffect = a_enchantment->GetCostliestEffectItem()->baseEffect;

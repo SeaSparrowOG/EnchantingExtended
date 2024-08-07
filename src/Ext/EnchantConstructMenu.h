@@ -24,18 +24,18 @@ namespace Ext
 				SoulGem = 0x40,
 
 				// Patching is a little easier if Disenchant mask fits in 1 byte
-				DisenchantAmmo = 0x80,
-				EnchantAmmo = 0x100,
-				EffectAmmo = 0x200,
+				DisenchantSpecial = 0x80,
+				EnchantSpecial = 0x100,
+				EffectSpecial = 0x200,
 
 				None = 0x0,
-				Disenchant = DisenchantWeapon | DisenchantArmor | DisenchantAmmo,
-				Item = EnchantWeapon | EnchantArmor | EnchantAmmo,
-				Enchantment = EffectWeapon | EffectArmor | EffectAmmo,
+				Disenchant = DisenchantWeapon | DisenchantArmor | DisenchantSpecial,
+				Item = EnchantWeapon | EnchantArmor | EnchantSpecial,
+				Enchantment = EffectWeapon | EffectArmor | EffectSpecial,
 
 				All = EnchantWeapon | DisenchantWeapon | EnchantArmor | DisenchantArmor |
-					EffectWeapon | EffectArmor | SoulGem | EnchantAmmo | DisenchantAmmo |
-					EffectAmmo,
+					EffectWeapon | EffectArmor | SoulGem | EnchantSpecial | DisenchantSpecial |
+					EffectSpecial,
 			};
 		};
 

@@ -19,7 +19,7 @@ namespace Hooks
 			0x3E8);
 
 		if (!REL::make_pattern<"E8">().match(hook.address())) {
-			logger::error("SkyUI::FilterFlagPatch failed to install"sv);
+			_loggerError("SkyUI::FilterFlagPatch failed to install");
 			return;
 		}
 
@@ -36,7 +36,7 @@ namespace Hooks
 			0x4A6);
 
 		if (!REL::make_pattern<"4C 8D 45 D7 48 8B 56 78">().match(hook.address())) {
-			logger::error("SkyUI::ItemDataPatch failed to install"sv);
+			_loggerError("SkyUI::ItemDataPatch failed to install");
 			return;
 		}
 
@@ -121,8 +121,8 @@ namespace Hooks
 	{
 		switch (a_entry->filterFlag.underlying()) {
 
-		case FilterFlag::EnchantAmmo:
-		case FilterFlag::DisenchantAmmo:
+		case FilterFlag::EnchantSpecial:
+		case FilterFlag::DisenchantSpecial:
 		{
 			const auto entry = static_cast<Menu::ItemChangeEntry*>(a_entry);
 			const auto& data = entry->data;
@@ -156,7 +156,7 @@ namespace Hooks
 			}
 		} break;
 
-		case FilterFlag::EffectAmmo:
+		case FilterFlag::EffectSpecial:
 		{
 			const auto entry = static_cast<Menu::EnchantmentEntry*>(a_entry);
 			const auto& form = entry->data;

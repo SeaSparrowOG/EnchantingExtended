@@ -159,24 +159,25 @@ namespace Hooks
 
 	RE::BGSExplosion* Gameplay::GetProjectileExplosion(RE::Projectile::LaunchData* a_launchData)
 	{
+#undef GetObject
 		const auto keywordConditionalExplosion =
 			RE::BGSDefaultObjectManager::GetSingleton()->GetObject<RE::BGSKeyword>(
 				RE::DEFAULT_OBJECTS::kKeywordConditionalExplosion);
 
-		if (a_launchData->sourceAmmo &&
-			a_launchData->sourceAmmo->HasKeyword(keywordConditionalExplosion) &&
-			(!a_launchData->sourceWeapon ||
-			 !a_launchData->sourceWeapon->HasKeyword(keywordConditionalExplosion))) {
+		if (a_launchData->ammoSource &&
+			a_launchData->ammoSource->HasKeyword(keywordConditionalExplosion) &&
+			(!a_launchData->weaponSource ||
+			 !a_launchData->weaponSource->HasKeyword(keywordConditionalExplosion))) {
 
 			return nullptr;
 		}
 
-		auto explosion = a_launchData->projectile->data.explosionType;
+		auto explosion = a_launchData->projectileBase->data.explosionType;
 
-		if (!a_launchData->source || !a_launchData->sourceAmmo)
+		if (!a_launchData->shooter || !a_launchData->weaponSource)
 			return explosion;
 
-		const auto actor = a_launchData->source->As<RE::Character>();
+		const auto actor = a_launchData->shooter->As<RE::Character>();
 		const auto& actorProcess = actor ? actor->currentProcess : nullptr;
 		const auto middleHigh = actorProcess ? actorProcess->middleHigh : nullptr;
 		const auto bothHands = middleHigh ? middleHigh->bothHands : nullptr;
@@ -213,8 +214,8 @@ namespace Hooks
 			return _AddMessage(a_queue, a_menuName, a_type, a_data);
 		}
 
-		std::int32_t delta = a_data->data - bothHands->countDelta;
-		a_data->data = static_cast<std::uint32_t>(extraList->GetCount() + delta);
+		std::int32_t delta = a_data->discovery - bothHands->countDelta;
+		a_data->discovery = static_cast<std::uint32_t>(extraList->GetCount() + delta);
 
 		return _AddMessage(a_queue, a_menuName, a_type, a_data);
 	}
@@ -254,7 +255,7 @@ namespace Hooks
 		invCount -= a_shotCount;
 
 		a_player->RemoveItem(
-			bothHands->GetObject(),
+			bothHands->object,
 			a_shotCount,
 			RE::ITEM_REMOVE_REASON::kRemove,
 			extraList,

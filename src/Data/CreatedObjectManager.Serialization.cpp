@@ -1,7 +1,5 @@
 #include "CreatedObjectManager.h"
 
-#include "RE/BGSSaveLoadGame.h"
-
 namespace Data
 {
 	void CreatedObjectManager::AddFailedEnchantmentLoad(
@@ -14,24 +12,24 @@ namespace Data
 	bool CreatedObjectManager::Save(SKSE::SerializationInterface* a_intfc) const
 	{
 		if (!a_intfc->WriteRecordData(baseExplosions.size())) {
-			logger::error("Failed to write size of baseExplosions"sv);
+			_loggerError("Failed to write size of baseExplosions");
 			return false;
 		}
 
 		for (const auto& [effect, explosion] : baseExplosions) {
 			if (!a_intfc->WriteRecordData(effect->formID)) {
-				logger::error("Failed to write FormID ({:08X})"sv, effect->formID);
+				_loggerError("Failed to write FormID ({:08X})", effect->formID);
 				return false;
 			}
 
 			if (!a_intfc->WriteRecordData(explosion->formID)) {
-				logger::error("Failed to write FormID ({:08X})"sv, explosion->formID);
+				_loggerError("Failed to write FormID ({:08X})", explosion->formID);
 				return false;
 			}
 		}
 
 		if (!a_intfc->WriteRecordData(ammoEnchantments.size())) {
-			logger::error("Failed to write size of ammoEnchantments"sv);
+			_loggerError("Failed to write size of ammoEnchantments");
 			return false;
 		}
 
@@ -39,25 +37,44 @@ namespace Data
 
 			RE::BGSExplosion* createdExplosion;
 			try {
-				createdExplosion = createdExplosions.at(entry.enchantment);
+				createdExplosion = createdExplosions.at(entry.magicItem->As<RE::EnchantmentItem>());
 			}
 			catch (std::out_of_range&) {
-				logger::error("Failed to look up created explosion"sv);
+				_loggerError("Failed to look up created explosion");
 				return false;
 			}
 
 			if (!a_intfc->WriteRecordData(static_cast<std::uint32_t>(entry.refCount))) {
-				logger::error("Failed to write refCount ({})"sv, entry.enchantment->formID);
+				_loggerError("Failed to write refCount ({})", entry.magicItem->formID);
 				return false;
 			}
 
-			if (!SaveEnchantment(entry.enchantment, a_intfc)) {
-				logger::error("Failed to save enchantment"sv);
+			if (!SaveEnchantment(entry.magicItem, a_intfc)) {
+				_loggerError("Failed to save enchantment");
 				return false;
 			}
 
 			if (!a_intfc->WriteRecordData(createdExplosion->formID)) {
-				logger::error("Failed to write FormID ({:08X})"sv, createdExplosion->formID);
+				_loggerError("Failed to write FormID ({:08X})", createdExplosion->formID);
+				return false;
+			}
+		}
+
+		//Also save staff enchantments
+
+		if (!a_intfc->WriteRecordData(staffEnchantments.size())) {
+			_loggerError("Failed to write size of staffEnchantments");
+			return false;
+		}
+
+		for (const auto& entry : staffEnchantments) {
+			if (!a_intfc->WriteRecordData(static_cast<std::uint32_t>(entry.refCount))) {
+				_loggerError("Failed to write refCount ({})", entry.magicItem->formID);
+				return false;
+			}
+
+			if (!SaveEnchantment(entry.magicItem, a_intfc)) {
+				_loggerError("Failed to save enchantment");
 				return false;
 			}
 		}
@@ -71,7 +88,7 @@ namespace Data
 
 		std::size_t baseExplosionsSize;
 		if (!a_intfc->ReadRecordData(baseExplosionsSize)) {
-			logger::error("Failed to read size of baseExplosions"sv);
+			_loggerError("Failed to read size of baseExplosions");
 			return false;
 		}
 
@@ -79,25 +96,25 @@ namespace Data
 
 			RE::FormID effectOldFormID;
 			if (!a_intfc->ReadRecordData(effectOldFormID)) {
-				logger::error("Failed to read FormID"sv);
+				_loggerError("Failed to read FormID");
 				return false;
 			}
 
 			RE::FormID effectFormID;
 			if (!a_intfc->ResolveFormID(effectOldFormID, effectFormID)) {
-				logger::error("Failed to resolve FormID ({:08X})"sv, effectOldFormID);
+				_loggerError("Failed to resolve FormID ({:08X})", effectOldFormID);
 				return false;
 			}
 
 			RE::FormID explosionOldFormID;
 			if (!a_intfc->ReadRecordData(explosionOldFormID)) {
-				logger::error("Failed to read FormID"sv);
+				_loggerError("Failed to read FormID");
 				return false;
 			}
 
 			RE::FormID explosionFormID;
 			if (!a_intfc->ResolveFormID(explosionOldFormID, explosionFormID)) {
-				logger::error("Failed to resolve FormID ({:08X})"sv, explosionOldFormID);
+				_loggerError("Failed to resolve FormID ({:08X})", explosionOldFormID);
 				return false;
 			}
 
@@ -111,7 +128,7 @@ namespace Data
 
 		RE::BSTArrayBase::size_type ammoEnchantmentsSize;
 		if (!a_intfc->ReadRecordData(ammoEnchantmentsSize)) {
-			logger::error("Failed to read size of ammoEnchantments"sv);
+			_loggerError("Failed to read size of ammoEnchantments");
 			return false;
 		}
 
@@ -120,7 +137,7 @@ namespace Data
 
 			std::uint32_t refCount;
 			if (!a_intfc->ReadRecordData(refCount)) {
-				logger::error("Failed to read refCount"sv);
+				_loggerError("Failed to read refCount");
 				return false;
 			}
 
@@ -128,21 +145,21 @@ namespace Data
 
 			RE::EnchantmentItem* enchantment;
 			if (!LoadEnchantment(enchantment, a_intfc)) {
-				logger::error("Failed to load enchantment"sv);
+				_loggerError("Failed to load enchantment");
 				return false;
 			}
 
 			const auto costliestEffect = enchantment->GetCostliestEffectItem()->baseEffect;
 			if (!costliestEffect) {
-				logger::error(
-					"Failed to look up base effect of enchantment ({:08X})"sv,
+				_loggerError(
+					"Failed to look up base effect of enchantment ({:08X})",
 					enchantment->formID);
 			}
 
 
 			RE::FormID explosionFormID;
 			if (!a_intfc->ReadRecordData(explosionFormID)) {
-				logger::error("Failed to read FormID"sv);
+				_loggerError("Failed to read FormID");
 				return false;
 			}
 
@@ -160,21 +177,75 @@ namespace Data
 					baseExplosion = baseExplosions.at(costliestEffect);
 				}
 				catch (std::out_of_range&) {
-					logger::error("Failed to look up base explosion"sv);
+					_loggerError("Failed to look up base explosion");
 					return false;
 				}
 
 				explosion = EnchantExplosion(baseExplosion, enchantment, explosionFormID);
 			}
 
-			entry.enchantment = enchantment;
+			entry.magicItem = enchantment;
 
 			ammoEnchantments.push_back(std::move(entry));
 			createdExplosions.insert({ enchantment, explosion });
 		}
 
+		//Also load staff enchantments
+
+		RE::BSTArrayBase::size_type staffEnchantmentsSize;
+		if (!a_intfc->ReadRecordData(staffEnchantmentsSize)) {
+			_loggerError("Failed to read size of staffEnchantments");
+			return false;
+		}
+
+		for (RE::BSTArrayBase::size_type i = 0; i < staffEnchantmentsSize; i++) {
+			EnchantmentEntry entry{};
+
+			std::uint32_t refCount;
+			if (!a_intfc->ReadRecordData(refCount)) {
+				_loggerError("Failed to read refCount");
+				return false;
+			}
+
+			entry.refCount = refCount;
+
+			RE::EnchantmentItem* enchantment;
+			if (!LoadEnchantment(enchantment, a_intfc)) {
+				_loggerError("Failed to load enchantment");
+				return false;
+			}
+
+			const auto costliestEffect = enchantment->GetCostliestEffectItem()->baseEffect;
+			if (!costliestEffect) {
+				_loggerError(
+					"Failed to look up base effect of enchantment ({:08X})",
+					enchantment->formID);
+			}
+
+			entry.magicItem = enchantment;
+
+			staffEnchantments.push_back(std::move(entry));
+		}
+
+		//Finally, resolve the enchantments.
+		//Since the created enchantments are not saved in the main save, we first
+		//have to load them from Misc.cpp's load handler here, and try to resolve them
+		//after we have created the relevant enchantments above.
+
 		for (auto& [exEnchantment, formID] : failedFormLoads) {
-			exEnchantment->enchantment = RE::TESForm::LookupByID<RE::EnchantmentItem>(formID);
+			auto* candidateEnchantment = RE::TESForm::LookupByID<RE::EnchantmentItem>(formID);
+			auto* costliestEffect = candidateEnchantment ? candidateEnchantment->GetCostliestEffectItem() : nullptr;
+			auto* baseEffect = costliestEffect ? costliestEffect->baseEffect : nullptr;
+			if (!candidateEnchantment || !baseEffect) {
+				_loggerError("Failed to find an enchantment.");
+				continue;
+			}
+
+			candidateEnchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+			candidateEnchantment->data.delivery = baseEffect->data.delivery;
+			candidateEnchantment->data.castingType = baseEffect->data.castingType;
+
+			exEnchantment->enchantment = candidateEnchantment;
 		}
 		failedFormLoads.clear();
 
@@ -189,55 +260,55 @@ namespace Data
 	}
 
 	bool CreatedObjectManager::SaveEnchantment(
-		const RE::EnchantmentItem* a_enchantment,
+		const RE::MagicItem* a_enchantment,
 		SKSE::SerializationInterface* a_intfc)
 	{
 		if (!a_intfc->WriteRecordData(a_enchantment->formID)) {
-			logger::error("Failed to write FormID ({:08X})"sv, a_enchantment->formID);
+			_loggerError("Failed to write FormID ({:08X})", a_enchantment->formID);
 			return false;
 		}
 
 		if (!a_intfc->WriteRecordData(a_enchantment->effects.size())) {
-			logger::error("Failed to write size of enchantment effects"sv);
+			_loggerError("Failed to write size of enchantment effects");
 			return false;
 		}
 
 		for (auto& effect : a_enchantment->effects) {
 			if (!a_intfc->WriteRecordData(effect->effectItem.magnitude)) {
-				logger::error("Failed to write effect magnitude"sv);
+				_loggerError("Failed to write effect magnitude");
 				return false;
 			}
 			if (!a_intfc->WriteRecordData(effect->effectItem.area)) {
-				logger::error("Failed to write effect area"sv);
+				_loggerError("Failed to write effect area");
 				return false;
 			}
 			if (!a_intfc->WriteRecordData(effect->effectItem.duration)) {
-				logger::error("Failed to write effect duration"sv);
+				_loggerError("Failed to write effect duration");
 				return false;
 			}
 			if (!a_intfc->WriteRecordData(effect->baseEffect->formID)) {
-				logger::error("Failed to write FormID ({:08X})"sv, effect->baseEffect->formID);
+				_loggerError("Failed to write FormID ({:08X})", effect->baseEffect->formID);
 				return false;
 			}
 			if (!a_intfc->WriteRecordData(effect->cost)) {
-				logger::error("Failed to write effect cost"sv);
+				_loggerError("Failed to write effect cost");
 				return false;
 			}
 
 			RE::TESConditionItem* item;
 			for (item = effect->conditions.head; item; item = item->next) {
 				if (!a_intfc->WriteRecordData(&item, sizeof(void*))) {
-					logger::error("Failed to write condition item"sv);
+					_loggerError("Failed to write condition item");
 					return false;
 				}
 				if (!a_intfc->WriteRecordData(item->data)) {
-					logger::error("Failed to write condition data"sv);
+					_loggerError("Failed to write condition data");
 					return false;
 				}
 			}
 
 			if (!a_intfc->WriteRecordData(&item, sizeof(void*))) {
-				logger::error("Failed to write condition end"sv);
+				_loggerError("Failed to write condition end");
 				return false;
 			}
 		}
@@ -251,7 +322,7 @@ namespace Data
 	{
 		RE::FormID formID;
 		if (!a_intfc->ReadRecordData(formID)) {
-			logger::error("Failed to read FormID"sv);
+			_loggerError("Failed to read FormID");
 			return false;
 		}
 
@@ -259,7 +330,7 @@ namespace Data
 
 		RE::BSTArrayBase::size_type effectsSize;
 		if (!a_intfc->ReadRecordData(effectsSize)) {
-			logger::error("Failed to read size of enchantment effects"sv);
+			_loggerError("Failed to read size of enchantment effects");
 			return false;
 		}
 
@@ -269,47 +340,47 @@ namespace Data
 			auto& effect = effects[i];
 
 			if (!a_intfc->ReadRecordData(effect.effectItem.magnitude)) {
-				logger::error("Failed to read effect magnitude"sv);
+				_loggerError("Failed to read effect magnitude");
 				return false;
 			}
 			if (!a_intfc->ReadRecordData(effect.effectItem.area)) {
-				logger::error("Failed to read effect area"sv);
+				_loggerError("Failed to read effect area");
 				return false;
 			}
 			if (!a_intfc->ReadRecordData(effect.effectItem.duration)) {
-				logger::error("Failed to read effect duration"sv);
+				_loggerError("Failed to read effect duration");
 				return false;
 			}
 			RE::FormID baseEffectOldFormID;
 			if (!a_intfc->ReadRecordData(baseEffectOldFormID)) {
-				logger::error("Failed to read FormID"sv);
+				_loggerError("Failed to read FormID");
 				return false;
 			}
 			RE::FormID baseEffectFormID;
 			if (!a_intfc->ResolveFormID(baseEffectOldFormID, baseEffectFormID)) {
-				logger::error("Failed to resolve FormID ({:08X})"sv, baseEffectOldFormID);
+				_loggerError("Failed to resolve FormID ({:08X})", baseEffectOldFormID);
 				return false;
 			}
 			effect.baseEffect = RE::TESForm::LookupByID<RE::EffectSetting>(baseEffectFormID);
 			if (!a_intfc->ReadRecordData(effect.cost)) {
-				logger::error("Failed to read effect cost"sv);
+				_loggerError("Failed to read effect cost");
 				return false;
 			}
 
 			std::uintptr_t conditionItem;
 			if (!a_intfc->ReadRecordData(conditionItem)) {
-				logger::error("Failed to read condition head"sv);
+				_loggerError("Failed to read condition head");
 				return false;
 			}
 			if (conditionItem) {
 				auto item = effect.conditions.head = new RE::TESConditionItem();
 				while (true) {
 					if (!a_intfc->ReadRecordData(item->data)) {
-						logger::error("Failed to read condition data"sv);
+						_loggerError("Failed to read condition data");
 						return false;
 					}
 					if (!a_intfc->ReadRecordData(conditionItem)) {
-						logger::error("Failed to read condition item"sv);
+						_loggerError("Failed to read condition item");
 						return false;
 					}
 					if (!conditionItem)

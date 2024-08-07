@@ -21,7 +21,7 @@ namespace Ext
 		switch (filterFlag) {
 		case FilterFlag::EnchantWeapon:
 		case FilterFlag::EnchantArmor:
-		case FilterFlag::EnchantAmmo:
+		case FilterFlag::EnchantSpecial:
 		{
 			for (auto& effect : a_menu->selected.effects) {
 				const auto item = static_cast<ItemChangeEntry*>(entry.get());
@@ -31,7 +31,7 @@ namespace Ext
 
 		case FilterFlag::EffectWeapon:
 		case FilterFlag::EffectArmor:
-		case FilterFlag::EffectAmmo:
+		case FilterFlag::EffectSpecial:
 		{
 			const auto item = a_menu->selected.item.get();
 			const auto effect = static_cast<EnchantmentEntry*>(entry.get());
@@ -71,10 +71,10 @@ namespace Ext
 
 			return true;
 
-		case FilterFlag::EnchantAmmo:
+		case FilterFlag::EnchantSpecial:
 			if (!a_menu->selected.effects.empty()) {
 				return a_menu->selected.effects[0]->filterFlag.underlying() ==
-					FilterFlag::EffectAmmo;
+					FilterFlag::EffectSpecial;
 			}
 
 			return true;
@@ -93,9 +93,9 @@ namespace Ext
 
 			return true;
 
-		case FilterFlag::EffectAmmo:
+		case FilterFlag::EffectSpecial:
 			if (a_menu->selected.item) {
-				return a_menu->selected.item->filterFlag.underlying() == FilterFlag::EnchantAmmo;
+				return a_menu->selected.item->filterFlag.underlying() == FilterFlag::EnchantSpecial;
 			}
 
 			return true;

@@ -8,12 +8,12 @@ namespace Serialization
 	void SaveCallback(SKSE::SerializationInterface* a_intfc)
 	{
 		if (!a_intfc->OpenRecord(CreatedObjectManager, Version)) {
-			logger::error("Failed to open record for CreatedObjectManager"sv);
+			_loggerError("Failed to open record for CreatedObjectManager");
 			return;
 		}
 
 		if (!Data::CreatedObjectManager::GetSingleton()->Save(a_intfc)) {
-			logger::error("Failed to save CreatedObjectManager data"sv);
+			_loggerError("Failed to save CreatedObjectManager data");
 		}
 	}
 
@@ -24,18 +24,18 @@ namespace Serialization
 		std::uint32_t length;
 		while (a_intfc->GetNextRecordInfo(type, version, length)) {
 			if (version != Version) {
-				logger::critical("Loaded data is incompatible with plugin version!"sv);
+				_loggerError("Loaded data is incompatible with plugin version!");
 			}
 
 			switch (type) {
 			case CreatedObjectManager:
 				if (!Data::CreatedObjectManager::GetSingleton()->Load(a_intfc)) {
-					logger::error("Failed to load CreatedObjectManager data"sv);
+					_loggerError("Failed to load CreatedObjectManager data");
 				}
 				break;
 
 			default:
-				logger::critical("Unrecognized record type ({})!"sv, DecodeTypeCode(type));
+				_loggerError("Unrecognized record type ({})!", DecodeTypeCode(type));
 				break;
 			}
 		}

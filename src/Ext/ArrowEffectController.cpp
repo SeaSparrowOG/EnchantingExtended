@@ -14,7 +14,7 @@ namespace Ext
 			const auto adjustNode = RE::NiNode::Create(1);
 			adjustNode->local.translate.y = 7.0f;
 
-			RE::TaskQueueInterface::GetSingleton()->Attach3D(a_model, adjustNode);
+			RE::TaskQueueInterface::GetSingleton()->QueueNodeAttach(a_model, adjustNode);
 
 			model.reset(adjustNode);
 		}
@@ -34,7 +34,7 @@ namespace Ext
 		const RE::BSFixedString name = isBolt ? "NPC R MagicNode [RMag]"sv : "Weapon"sv;
 		const auto fxAttachRoot = actorNode->GetObjectByName(name);
 
-		RE::TaskQueueInterface::GetSingleton()->Attach3D(model.get(), fxAttachRoot);
+		RE::TaskQueueInterface::GetSingleton()->QueueNodeAttach(model.get(), fxAttachRoot->AsNode());
 
 		attachRoot.reset(fxAttachRoot);
 	}

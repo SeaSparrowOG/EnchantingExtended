@@ -1,0 +1,24 @@
+set(sources ${sources}
+	src/Data/CreatedObjectManager.Serialization.cpp
+	src/Data/CreatedObjectManager.cpp
+	src/Data/EnchantArtManager.cpp
+	src/Ext/AmmoEnchantmentController.cpp
+	src/Ext/ArrowEffectController.cpp
+	src/Ext/EnchantConstructMenu.cpp
+	src/Ext/NiAVObject.cpp
+	src/Ext/TESAmmo.cpp
+	src/Hooks/Disenchant.cpp
+	src/Hooks/Enchanting.cpp
+	src/Hooks/FilterFlags.cpp
+	src/Hooks/Gameplay.cpp
+	src/Hooks/Misc.cpp
+	src/Hooks/SkyUI.cpp
+	src/Hooks/VFX.cpp
+	src/Papyrus/AmmoEnchanting.cpp
+	src/RE/BSResource.cpp
+	src/SKSEPlugin/SKSEPlugin.cpp
+	src/Serialization/Serialization.cpp
+	src/Settings/GlobalSettings.cpp
+	src/Settings/INISettings.cpp
+	src/Translation/Translation.cpp
+)

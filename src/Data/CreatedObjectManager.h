@@ -5,7 +5,7 @@ namespace Data
 	class CreatedObjectManager final
 	{
 	public:
-		using EnchantmentEntry = RE::BGSCreatedObjectManager::EnchantmentEntry;
+		using EnchantmentEntry = RE::BGSCreatedObjectManager::CreatedMagicItemData;
 
 		static CreatedObjectManager* GetSingleton();
 
@@ -18,6 +18,8 @@ namespace Data
 		void SetBaseExplosion(RE::EnchantmentItem* a_enchantment, RE::BGSExplosion* a_explosion);
 
 		RE::EnchantmentItem* CreateAmmoEnchantment(const RE::BSTArray<RE::Effect>& a_effects);
+
+		RE::EnchantmentItem* CreateStaffEnchantment(const RE::BSTArray<RE::Effect>& a_effects);
 
 		bool IsBaseAmmoEnchantment(RE::EnchantmentItem* a_enchantment) const;
 
@@ -44,7 +46,7 @@ namespace Data
 			bool a_isWeapon);
 
 		static bool SaveEnchantment(
-			const RE::EnchantmentItem* a_enchantment,
+			const RE::MagicItem* a_enchantment,
 			SKSE::SerializationInterface* a_intfc);
 
 		static bool LoadEnchantment(
@@ -52,6 +54,7 @@ namespace Data
 			SKSE::SerializationInterface* a_intfc);
 
 		RE::BSTArray<EnchantmentEntry> ammoEnchantments;
+		RE::BSTArray<EnchantmentEntry> staffEnchantments;
 		std::map<RE::EffectSetting*, RE::BGSExplosion*> baseExplosions;
 		std::map<RE::EnchantmentItem*, RE::BGSExplosion*> createdExplosions;
 		std::map<RE::ExtraEnchantment*, RE::FormID> failedFormLoads;

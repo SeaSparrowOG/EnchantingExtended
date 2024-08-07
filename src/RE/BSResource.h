@@ -1,6 +1,5 @@
 #pragma once
 
-#include "PCH/PCH.h"
 #include "RE/Offset.h"
 
 namespace RE

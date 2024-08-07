@@ -40,11 +40,16 @@ namespace Hooks
 		// When selecting an enchantment without an item, identify Ammo form type
 		static void ItemPreviewPatch();
 
+		//Allows for staff enchantments to show in the menu. The menu filters out non-self const // touch ff enchantments by default.
+		static void EnchantmentEntryPatch();
+
 		static void PushBack(void* a_arg1, Menu::EnchantmentEntry* a_entry);
 
 		static std::uint32_t GetFilterFlag(RE::InventoryEntryData* a_entry);
 
 		static std::uint32_t GetEnabledFilters(Menu::Selections* a_selected);
+
+		static bool EvaluateEnchantment(RE::EnchantmentItem* a_item);
 
 		static RE::FormType GetFormTypeFromEffectFlag(std::uint32_t a_flag);
 

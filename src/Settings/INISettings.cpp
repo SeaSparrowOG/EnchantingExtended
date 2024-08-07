@@ -1,7 +1,5 @@
 #include "INISettings.h"
 
-#include <SimpleIni.h>
-
 namespace Settings
 {
 	INISettings* INISettings::GetSingleton()
@@ -12,9 +10,9 @@ namespace Settings
 
 	void INISettings::LoadSettings()
 	{
-		::CSimpleIniA ini;
+		CSimpleIniA ini;
 		ini.SetUnicode();
-		ini.LoadFile(fmt::format(R"(.\Data\SKSE\Plugins\{}.ini)", Plugin::NAME).c_str());
+		ini.LoadFile(fmt::format(R"(.\Data\SKSE\Plugins\{}.ini)", Version::NAME).c_str());
 
 		fAmmoChargeMult = static_cast<float>(
 			ini.GetDoubleValue("AmmoEnchanting", "fAmmoChargeMult", 0.2));

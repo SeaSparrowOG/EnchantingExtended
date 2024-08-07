@@ -29,7 +29,7 @@ namespace Hooks
 
 	RE::EnchantmentItem* Disenchant::GetEnchantment(RE::InventoryEntryData* a_entry)
 	{
-		const auto form = a_entry->GetObject();
+		const auto form = a_entry->object;
 		if (const auto ammo = form ? form->As<RE::TESAmmo>() : nullptr) {
 
 			const auto explosion = Ext::TESAmmo::GetExplosion(ammo);
