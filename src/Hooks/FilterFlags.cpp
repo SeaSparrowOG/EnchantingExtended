@@ -315,7 +315,10 @@ namespace Hooks
 			Patch()
 			{
 				// we shouldn't need an explicit check for EffectArmor
-				test(ecx, FilterFlag::EffectWeapon | FilterFlag::EffectSpecial);
+				test(
+					ecx,
+					FilterFlag::EffectWeapon | FilterFlag::EffectSpecial |
+						FilterFlag::EffectStaff);
 				db(0x75);  // jnz hook + 0x1D
 				db(0x15);
 				nop(0x2);
@@ -363,7 +366,7 @@ namespace Hooks
 			{
 				test(
 					eax,
-					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial | FilterFlag::SoulGem));
+					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial | FilterFlag::SoulGem | FilterFlag::EffectStaff));
 			}
 		};
 
@@ -379,7 +382,8 @@ namespace Hooks
 				mov(rbx, r13);
 				test(
 					dword[rbx + offsetof(Menu::CategoryListEntry, filterFlag)],
-					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial));
+					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial |
+					  FilterFlag::EffectStaff));
 			}
 		};
 
@@ -658,7 +662,6 @@ namespace Hooks
 									  ->IsInValidStaffWorkbench();
 		if (isInStaffEnchanter) {
 			if (!a_selected->effects.empty()) {
-				filters = FilterFlag::None;
 				for (auto& selectedEffect : a_selected->effects) {
 					filters |= selectedEffect->filterFlag.underlying();
 				}
@@ -666,8 +669,6 @@ namespace Hooks
 			else {
 				filters = FilterFlag::All;
 			}
-
-			filters |= FilterFlag::SoulGem;
 		}
 		else {
 
