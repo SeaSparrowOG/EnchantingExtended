@@ -8,7 +8,6 @@ namespace Ext
 		using CategoryListEntry = Menu::CategoryListEntry;
 		using EnchantmentEntry = Menu::EnchantmentEntry;
 		using ItemChangeEntry = Menu::ItemChangeEntry;
-
 		struct FilterFlag
 		{
 			FilterFlag() = delete;
@@ -23,19 +22,33 @@ namespace Ext
 				EffectArmor = 0x20,
 				SoulGem = 0x40,
 
-				// Patching is a little easier if Disenchant mask fits in 1 byte
+				// Ammo Specific:
 				DisenchantSpecial = 0x80,
 				EnchantSpecial = 0x100,
 				EffectSpecial = 0x200,
 
+				// Staff Specific:
+				FFAimed = 0x400,
+				FFSelf = 0x800,
+				FFActor = 0x1000,
+				FFLocation = 0x2000,
+				ConcAimed = 0x4000,
+				ConcSelf = 0x8000,
+				ConcActor = 0x10000,
+				ConcLocation = 0x20000,
+
 				None = 0x0,
+
+				EffectStaff = FFAimed | FFSelf | FFActor | FFLocation | ConcAimed | ConcSelf |
+					          ConcActor | ConcLocation,
+
 				Disenchant = DisenchantWeapon | DisenchantArmor | DisenchantSpecial,
 				Item = EnchantWeapon | EnchantArmor | EnchantSpecial,
-				Enchantment = EffectWeapon | EffectArmor | EffectSpecial,
+				Enchantment = EffectWeapon | EffectArmor | EffectSpecial | EffectStaff,
 
 				All = EnchantWeapon | DisenchantWeapon | EnchantArmor | DisenchantArmor |
 					EffectWeapon | EffectArmor | SoulGem | EnchantSpecial | DisenchantSpecial |
-					EffectSpecial,
+					EffectSpecial | EffectStaff
 			};
 		};
 

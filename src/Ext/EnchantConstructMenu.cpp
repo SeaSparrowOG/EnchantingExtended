@@ -1,4 +1,6 @@
 #include "EnchantConstructMenu.h"
+
+#include "Events/ActivationListener.h"
 #include <algorithm>
 
 namespace Ext
@@ -17,91 +19,105 @@ namespace Ext
 		auto& entry = a_menu->listEntries[a_index];
 		auto filterFlag = entry->filterFlag.underlying();
 
-		// Enable worn restrictions for weapon and ammo
-		switch (filterFlag) {
-		case FilterFlag::EnchantWeapon:
-		case FilterFlag::EnchantArmor:
-		case FilterFlag::EnchantSpecial:
-		{
-			for (auto& effect : a_menu->selected.effects) {
-				const auto item = static_cast<ItemChangeEntry*>(entry.get());
-				restrictionsCompatible &= HasCompatibleRestrictions(item, effect.get());
+		bool isInStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()
+									  ->IsInValidStaffWorkbench();
+		if (isInStaffEnchanter) {
+			if (!a_menu->selected.effects.empty()) {
+				return a_menu->selected.effects[0]->filterFlag.underlying() == filterFlag;
 			}
-		} break;
-
-		case FilterFlag::EffectWeapon:
-		case FilterFlag::EffectArmor:
-		case FilterFlag::EffectSpecial:
-		{
-			const auto item = a_menu->selected.item.get();
-			const auto effect = static_cast<EnchantmentEntry*>(entry.get());
-			restrictionsCompatible = HasCompatibleRestrictions(item, effect);
-		} break;
+			else {
+				return true;
+			}
 		}
-
-		if (!restrictionsCompatible) {
-			if (a_showNotification) {
-				// "Chosen enchantment cannot be applied to this item"
-				static const auto setting =
-					RE::GameSettingCollection::GetSingleton()
-					->GetSetting("sEnchantArmorIncompatible");
-
-				if (setting) {
-					RE::DebugNotification(setting->data.s);
+		else {
+			// Enable worn restrictions for weapon and ammo
+			switch (filterFlag) {
+			case FilterFlag::EnchantWeapon:
+			case FilterFlag::EnchantArmor:
+			case FilterFlag::EnchantSpecial:
+			{
+				for (auto& effect : a_menu->selected.effects) {
+					const auto item = static_cast<ItemChangeEntry*>(entry.get());
+					restrictionsCompatible &= HasCompatibleRestrictions(item, effect.get());
 				}
+			} break;
+
+			case FilterFlag::EffectWeapon:
+			case FilterFlag::EffectArmor:
+			case FilterFlag::EffectSpecial:
+			{
+				const auto item = a_menu->selected.item.get();
+				const auto effect = static_cast<EnchantmentEntry*>(entry.get());
+				restrictionsCompatible = HasCompatibleRestrictions(item, effect);
+			} break;
 			}
 
-			return false;
-		}
+			if (!restrictionsCompatible) {
+				if (a_showNotification) {
+					// "Chosen enchantment cannot be applied to this item"
+					static const auto setting = RE::GameSettingCollection::GetSingleton()
+													->GetSetting("sEnchantArmorIncompatible");
 
-		switch (filterFlag) {
-		case FilterFlag::EnchantWeapon:
-			if (!a_menu->selected.effects.empty()) {
-				return a_menu->selected.effects[0]->filterFlag.underlying() ==
-					FilterFlag::EffectWeapon;
+					if (setting) {
+						RE::DebugNotification(setting->data.s);
+					}
+				}
+
+				return false;
 			}
 
-			return true;
+			switch (filterFlag) {
+			case FilterFlag::EnchantWeapon:
+				if (!a_menu->selected.effects.empty()) {
+					return a_menu->selected.effects[0]->filterFlag.underlying() ==
+						FilterFlag::EffectWeapon;
+				}
 
-		case FilterFlag::EnchantArmor:
-			if (!a_menu->selected.effects.empty()) {
-				return a_menu->selected.effects[0]->filterFlag.underlying() ==
-					FilterFlag::EffectArmor;
+				return true;
+
+			case FilterFlag::EnchantArmor:
+				if (!a_menu->selected.effects.empty()) {
+					return a_menu->selected.effects[0]->filterFlag.underlying() ==
+						FilterFlag::EffectArmor;
+				}
+
+				return true;
+
+			case FilterFlag::EnchantSpecial:
+				if (!a_menu->selected.effects.empty()) {
+					return a_menu->selected.effects[0]->filterFlag.underlying() ==
+						FilterFlag::EffectSpecial;
+				}
+
+				return true;
+
+			case FilterFlag::EffectWeapon:
+				if (a_menu->selected.item) {
+					return a_menu->selected.item->filterFlag.underlying() ==
+						FilterFlag::EnchantWeapon;
+				}
+
+				return true;
+
+			case FilterFlag::EffectArmor:
+				if (a_menu->selected.item) {
+					return a_menu->selected.item->filterFlag.underlying() ==
+						FilterFlag::EnchantArmor;
+				}
+
+				return true;
+
+			case FilterFlag::EffectSpecial:
+				if (a_menu->selected.item) {
+					return a_menu->selected.item->filterFlag.underlying() ==
+						FilterFlag::EnchantSpecial;
+				}
+
+				return true;
+
+			default:
+				return true;
 			}
-
-			return true;
-
-		case FilterFlag::EnchantSpecial:
-			if (!a_menu->selected.effects.empty()) {
-				return a_menu->selected.effects[0]->filterFlag.underlying() ==
-					FilterFlag::EffectSpecial;
-			}
-
-			return true;
-
-		case FilterFlag::EffectWeapon:
-			if (a_menu->selected.item) {
-				return a_menu->selected.item->filterFlag.underlying() == FilterFlag::EnchantWeapon;
-			}
-
-			return true;
-
-		case FilterFlag::EffectArmor:
-			if (a_menu->selected.item) {
-				return a_menu->selected.item->filterFlag.underlying() == FilterFlag::EnchantArmor;
-			}
-
-			return true;
-
-		case FilterFlag::EffectSpecial:
-			if (a_menu->selected.item) {
-				return a_menu->selected.item->filterFlag.underlying() == FilterFlag::EnchantSpecial;
-			}
-
-			return true;
-
-		default:
-			return true;
 		}
 	}
 

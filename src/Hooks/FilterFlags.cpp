@@ -440,7 +440,66 @@ namespace Hooks
 			bool isStaffEnchantment = enchantment ? enchantment->GetSpellType() == RE::MagicSystem::SpellType::kStaffEnchantment : false;
 
 			if (isStaffEnchantment && ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench()) {
-				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectSpecial);
+				auto* costliest = enchantment->GetCostliestEffectItem();
+				auto* baseEffect = costliest ? costliest->baseEffect : nullptr;
+				if (!baseEffect)
+					a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::None);
+
+				auto delivery = baseEffect->data.delivery;
+				auto casting = baseEffect->data.castingType;
+				switch (delivery) {
+				case RE::MagicSystem::Delivery::kAimed:
+					switch (casting) {
+					case RE::MagicSystem::CastingType::kConcentration:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcAimed);
+						break;
+					case RE::MagicSystem::CastingType::kFireAndForget:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFAimed);
+						break;
+					default:
+						break;
+					}
+					break;
+				case RE::MagicSystem::Delivery::kSelf:
+					switch (casting) {
+					case RE::MagicSystem::CastingType::kConcentration:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcSelf);
+						break;
+					case RE::MagicSystem::CastingType::kFireAndForget:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFSelf);
+						break;
+					default:
+						break;
+					}
+					break;
+				case RE::MagicSystem::Delivery::kTargetActor:
+
+					switch (casting) {
+					case RE::MagicSystem::CastingType::kConcentration:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcActor);
+						break;
+					case RE::MagicSystem::CastingType::kFireAndForget:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFActor);
+						break;
+					default:
+						break;
+					}
+					break;
+				case RE::MagicSystem::Delivery::kTargetLocation:
+					switch (casting) {
+					case RE::MagicSystem::CastingType::kConcentration:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcLocation);
+						break;
+					case RE::MagicSystem::CastingType::kFireAndForget:
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFLocation);
+						break;
+					default:
+						break;
+					}
+					break;
+				default:
+					break;
+				}
 			}
 			else if (manager->IsBaseAmmoEnchantment(a_entry->data)
 				&& ActivationListener::EnchantingTable::GetSingleton()->IsInValidAmmoWorkbench())
@@ -508,9 +567,7 @@ namespace Hooks
 
 		if (inStaffEnchanter) {
 			if (isStaffSelected) {
-				if (!ActivationListener::EnchantingTable::GetSingleton()
-						 ->IsInValidStaffWorkbench() ||
-					(disallowEnchanting && staff->HasKeyword(disallowEnchanting))) {
+				if (disallowEnchanting && staff->HasKeyword(disallowEnchanting)) {
 					return FilterFlag::None;
 				}
 				else if (!a_entry->IsEnchanted()) {
@@ -597,47 +654,62 @@ namespace Hooks
 	std::uint32_t FilterFlags::GetEnabledFilters(Menu::Selections* a_selected)
 	{
 		std::uint32_t filters = FilterFlag::SoulGem;
+		bool isInStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()
+									  ->IsInValidStaffWorkbench();
+		if (isInStaffEnchanter) {
+			if (!a_selected->effects.empty()) {
+				filters = FilterFlag::None;
+				for (auto& selectedEffect : a_selected->effects) {
+					filters |= selectedEffect->filterFlag.underlying();
+				}
+			}
+			else {
+				filters = FilterFlag::All;
+			}
 
-		if (a_selected->item) {
-			switch (a_selected->item->filterFlag.underlying()) {
-			case FilterFlag::EnchantWeapon:
-				filters = FilterFlag::SoulGem | FilterFlag::EffectWeapon |
-					FilterFlag::EnchantWeapon;
-				break;
-			case FilterFlag::EnchantArmor:
-				filters = FilterFlag::SoulGem | FilterFlag::EffectArmor | FilterFlag::EnchantArmor;
-				break;
-			case FilterFlag::EnchantSpecial:
-				filters = FilterFlag::SoulGem | FilterFlag::EffectSpecial | FilterFlag::DisenchantSpecial;
-				break;
+			filters |= FilterFlag::SoulGem;
+		}
+		else {
+
+			if (a_selected->item) {
+				switch (a_selected->item->filterFlag.underlying()) {
+				case FilterFlag::EnchantWeapon:
+					filters = FilterFlag::SoulGem | FilterFlag::EffectWeapon |
+						FilterFlag::EnchantWeapon;
+					break;
+				case FilterFlag::EnchantArmor:
+					filters = FilterFlag::SoulGem | FilterFlag::EffectArmor |
+						FilterFlag::EnchantArmor;
+					break;
+				case FilterFlag::EnchantSpecial:
+					filters = FilterFlag::SoulGem | FilterFlag::EffectSpecial |
+						FilterFlag::DisenchantSpecial;
+					break;
+				}
+			}
+
+			if (!a_selected->effects.empty()) {
+				switch (a_selected->effects[0]->filterFlag.underlying()) {
+				case FilterFlag::EffectWeapon:
+					filters |= FilterFlag::EffectWeapon | FilterFlag::EnchantWeapon;
+					break;
+				case FilterFlag::EffectArmor:
+					filters |= FilterFlag::EffectArmor | FilterFlag::EnchantArmor;
+					break;
+				case FilterFlag::EffectSpecial:
+					filters |= FilterFlag::EffectSpecial | FilterFlag::EnchantSpecial;
+					break;
+				}
+			}
+
+			if (!a_selected->item && !a_selected->effects.empty()) {
+				filters |= FilterFlag::Enchantment;
+			}
+
+			if (!(filters & (FilterFlag::Enchantment | FilterFlag::Item))) {
+				filters = FilterFlag::All;
 			}
 		}
-
-		if (!a_selected->effects.empty()) {
-			switch (a_selected->effects[0]->filterFlag.underlying()) {
-			case FilterFlag::EffectWeapon:
-				filters |= FilterFlag::EffectWeapon | FilterFlag::EnchantWeapon;
-				break;
-			case FilterFlag::EffectArmor:
-				filters |= FilterFlag::EffectArmor | FilterFlag::EnchantArmor;
-				break;
-			case FilterFlag::EffectSpecial:
-				filters |= FilterFlag::EffectSpecial | FilterFlag::EnchantSpecial;
-				break;
-			}
-		}
-
-		if (a_selected->item && a_selected->effects.empty()) {
-			filters |= FilterFlag::Item;
-		}
-		else if (!a_selected->item && !a_selected->effects.empty()) {
-			filters |= FilterFlag::Enchantment;
-		}
-
-		if (!(filters & (FilterFlag::Enchantment | FilterFlag::Item))) {
-			filters = FilterFlag::All;
-		}
-
 		return filters;
 	}
 
