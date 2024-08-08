@@ -44,7 +44,8 @@ namespace Ext
 
 				Disenchant = DisenchantWeapon | DisenchantArmor | DisenchantSpecial,
 				Item = EnchantWeapon | EnchantArmor | EnchantSpecial,
-				Enchantment = EffectWeapon | EffectArmor | EffectSpecial | EffectStaff,
+				Enchantment = EffectWeapon | EffectArmor | EffectSpecial | FFAimed | FFSelf |
+					FFActor | FFLocation | ConcAimed | ConcSelf | ConcActor | ConcLocation,
 
 				All = EnchantWeapon | DisenchantWeapon | EnchantArmor | DisenchantArmor |
 					EffectWeapon | EffectArmor | SoulGem | EnchantSpecial | DisenchantSpecial |

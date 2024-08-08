@@ -449,6 +449,12 @@ namespace Hooks
 				if (!baseEffect)
 					a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::None);
 
+				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectSpecial);
+				//Regarding the following block: Early in development, you could have multiple
+				//enchantments on a single staff. After discovering the Ice Storm of Paralysis
+				//staff, I decided "fuck that". This will stay here in case I figure out a proper
+				//way to implement this in the future.
+				/*
 				auto delivery = baseEffect->data.delivery;
 				auto casting = baseEffect->data.castingType;
 				switch (delivery) {
@@ -504,6 +510,7 @@ namespace Hooks
 				default:
 					break;
 				}
+				*/
 			}
 			else if (manager->IsBaseAmmoEnchantment(a_entry->data)
 				&& ActivationListener::EnchantingTable::GetSingleton()->IsInValidAmmoWorkbench())
@@ -661,7 +668,11 @@ namespace Hooks
 		bool isInStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()
 									  ->IsInValidStaffWorkbench();
 		if (isInStaffEnchanter) {
+			filters = FilterFlag::All;
+			// Regarding this block: see the note about multiple enchantments.
+			/*
 			if (!a_selected->effects.empty()) {
+				filters |= FilterFlag::EnchantSpecial;
 				for (auto& selectedEffect : a_selected->effects) {
 					filters |= selectedEffect->filterFlag.underlying();
 				}
@@ -669,6 +680,7 @@ namespace Hooks
 			else {
 				filters = FilterFlag::All;
 			}
+			*/
 		}
 		else {
 

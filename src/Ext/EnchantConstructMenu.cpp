@@ -22,8 +22,14 @@ namespace Ext
 		bool isInStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()
 									  ->IsInValidStaffWorkbench();
 		if (isInStaffEnchanter) {
+			if (filterFlag == FilterFlag::SoulGem || filterFlag == FilterFlag::EnchantSpecial) {
+				return true;
+			}
+
 			if (!a_menu->selected.effects.empty()) {
-				return a_menu->selected.effects[0]->filterFlag.underlying() == filterFlag;
+				return a_menu->selected.effects[0].get()->GetName() == entry.get()->GetName();
+				//Multiple enchantments on a single staff are kind of too good.
+				//return a_menu->selected.effects[0]->filterFlag.underlying() == filterFlag;
 			}
 			else {
 				return true;
