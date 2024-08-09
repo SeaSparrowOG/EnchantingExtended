@@ -236,7 +236,7 @@ namespace Data
 			auto* candidateEnchantment = RE::TESForm::LookupByID<RE::EnchantmentItem>(formID);
 			auto* costliestEffect = candidateEnchantment ? candidateEnchantment->GetCostliestEffectItem() : nullptr;
 			auto* baseEffect = costliestEffect ? costliestEffect->baseEffect : nullptr;
-			if (!candidateEnchantment || !baseEffect) {
+			if (!baseEffect) {
 				_loggerError("Failed to find an enchantment.");
 				continue;
 			}

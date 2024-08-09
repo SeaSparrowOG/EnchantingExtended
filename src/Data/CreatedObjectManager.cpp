@@ -80,30 +80,6 @@ namespace Data
 		enchantment->SetDelivery(firstEffect->data.delivery);
 		enchantment->SetCastingType(firstEffect->data.castingType);
 
-		RE::BSTArray<RE::Effect> enchantmentExplosionEffects = RE::BSTArray<RE::Effect>();
-		RE::BGSExplosion* lastExplosion = nullptr;
-		for (auto* effect : enchantment->effects) {
-			if (effect->baseEffect && effect->baseEffect->data.explosion) {
-				enchantmentExplosionEffects.push_back(*effect);
-				lastExplosion = effect->baseEffect->data.explosion;
-			}
-		}
-
-		if (enchantmentExplosionEffects.empty())
-			return enchantment;
-
-		auto explosionEnchantment = create(
-			explosionEnchantments,
-			enchantmentExplosionEffects,
-			&CreatedObjectManager::CreateEnchantment,
-			true);
-		if (!explosionEnchantment || !lastExplosion)
-			return enchantment;
-
-		auto* costliestEffect = enchantment->GetCostliestEffectItem()->baseEffect;
-		auto createdExplosion = EnchantExplosion(lastExplosion, enchantment);
-		costliestEffect->data.explosion = createdExplosion;
-		createdExplosions[enchantment] = createdExplosion;
 		return enchantment;
 	}
 
