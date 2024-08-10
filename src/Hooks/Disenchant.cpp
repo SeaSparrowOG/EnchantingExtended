@@ -52,6 +52,14 @@ namespace Hooks
 			auto* baseEnchantment = enchantment
 				? enchantment->data.baseEnchantment
 				: nullptr;
+
+			//Not sure I want this.
+			/*
+			while (baseEnchantment) {
+				enchantment = baseEnchantment;
+				baseEnchantment = baseEnchantment->data.baseEnchantment;
+			}
+			*/
 			enchantment = baseEnchantment ? baseEnchantment : enchantment;
 			return enchantment;
 		}
