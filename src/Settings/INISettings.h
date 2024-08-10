@@ -15,6 +15,7 @@ namespace Settings
 
 		void LoadSettings();
 
+		float fStaffChargeMult;
 		float fAmmoChargeMult;
 		float fAmmoEffectCostMult;
 

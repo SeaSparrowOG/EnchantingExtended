@@ -348,5 +348,9 @@ namespace Hooks
 		if (Data::CreatedObjectManager::GetSingleton()->IsBaseAmmoEnchantment(a_enchantment)) {
 			a_value *= Settings::INISettings::GetSingleton()->fAmmoChargeMult;
 		}
+		else if (const auto* staff = a_item->As<RE::TESObjectWEAP>();
+				 staff ? staff->IsStaff() : false) {
+			a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
+		}
 	}
 }
