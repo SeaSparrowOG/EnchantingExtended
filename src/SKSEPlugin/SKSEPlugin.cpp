@@ -33,6 +33,40 @@ namespace
 		//Pattern
 		spdlog::set_pattern("%v");
 	}
+
+	void HandleEnchantingTables()
+	{
+		auto* dataHandler = RE::TESDataHandler::GetSingleton();
+		auto& furnitureArray = dataHandler->GetFormArray<RE::TESFurniture>();
+		for (auto* furniture : furnitureArray) {
+			if (!furniture->workBenchData.usesSkill.any(RE::ActorValue::kEnchanting)) {
+				continue;
+			}
+			if (!furniture->HasKeywordString("DLC2StaffEnchanter"sv)) {
+				continue;
+			}
+
+			furniture->workBenchData
+				.benchType = RE::TESFurniture::WorkBenchData::BenchType::kEnchanting;
+			auto name = _debugEDID(furniture);
+			if (!name.empty()) {
+				_loggerInfo("{} is now a proper staff enchanter.", name);
+			}
+		}
+	}
+}
+
+void MessageHandler(SKSE::MessagingInterface::Message* a_message)
+{
+	switch (a_message->type) {
+	case SKSE::MessagingInterface::kPreLoadGame:
+		break;
+	case SKSE::MessagingInterface::kDataLoaded:
+		HandleEnchantingTables();
+		break;
+	default:
+		break;
+	}
 }
 
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
@@ -54,29 +88,42 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	_loggerInfo("Plugin Version: {}.", Version::VERSION);
 	_loggerInfo("-------------------------------------------------------------------------------------");
 	SKSE::Init(a_skse);
-
-	SKSE::Init(a_skse);
 	SKSE::AllocTrampoline(273);
 
-	Hooks::Misc::Install();
-	Hooks::Enchanting::Install();
-	Hooks::FilterFlags::Install();
-	Hooks::Disenchant::Install();
-	Hooks::Gameplay::Install();
-	Hooks::VFX::Install();
-	Hooks::SkyUI::Install();
+	_loggerInfo("Reading settings...");
+	Settings::INISettings::GetSingleton()->LoadSettings();
 
+	_loggerInfo("Installing misc hooks...");
+	Hooks::Misc::Install();
+	_loggerInfo("Installing enchanting hooks...");
+	Hooks::Enchanting::Install();
+	_loggerInfo("Installing filter flag hooks...");
+	Hooks::FilterFlags::Install();
+	_loggerInfo("Installing disenchanting hooks...");
+	Hooks::Disenchant::Install();
+	_loggerInfo("Installing gameplay hooks....");
+	Hooks::Gameplay::Install();
+	_loggerInfo("Installing VFX hooks...");
+	Hooks::VFX::Install();
+	_loggerInfo("Installing SkyUI hooks...");
+	Hooks::SkyUI::Install();
+	
+	_loggerInfo("Preparing serialiaztion callbacks...");
 	const auto serialization = SKSE::GetSerializationInterface();
 	serialization->SetUniqueID(Serialization::ID);
 	serialization->SetSaveCallback(&Serialization::SaveCallback);
 	serialization->SetLoadCallback(&Serialization::LoadCallback);
 	serialization->SetRevertCallback(&Serialization::RevertCallback);
-
+	
+	_loggerInfo("Registering new papyrus functions...");
 	const auto papyrus = SKSE::GetPapyrusInterface();
 	papyrus->Register(&Papyrus::AmmoEnchanting::RegisterFuncs);
-
-	Settings::INISettings::GetSingleton()->LoadSettings();
-
+	
+	_loggerInfo("Modifying staff enchanters...");
 	ActivationListener::EnchantingTable::GetSingleton()->RegisterListener();
+	auto messaging = SKSE::GetMessagingInterface();
+	messaging->RegisterListener(MessageHandler);
+	_loggerInfo("Finished startup tasks.");
+	_loggerInfo("-------------------------------------------------------------------------------------");
 	return true;
 }
