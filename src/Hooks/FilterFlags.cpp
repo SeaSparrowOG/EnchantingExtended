@@ -5,6 +5,7 @@
 #include "Ext/TESAmmo.h"
 #include "RE/Offset.h"
 #include "Settings/GlobalSettings.h"
+#include "Settings/INISettings.h"
 
 #define NOGDI
 #undef GetObject
@@ -366,14 +367,20 @@ namespace Hooks
 			{
 				test(
 					eax,
-					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial | FilterFlag::SoulGem | FilterFlag::EffectStaff));
+					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial | FilterFlag::SoulGem |
+					  FilterFlag::EffectStaff));
 			}
 		};
 
-		Patch1 patch1{};
-		patch1.ready();
-
-		assert(patch1.getSize() <= 0x8);
+		struct Patch1NoStaff : Xbyak::CodeGenerator
+		{
+			Patch1NoStaff()
+			{
+				test(
+					eax,
+					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial | FilterFlag::SoulGem));
+			}
+		};
 
 		struct Patch2 : Xbyak::CodeGenerator
 		{
@@ -387,15 +394,42 @@ namespace Hooks
 			}
 		};
 
-		Patch2 patch2{};
-		patch2.ready();
-
-		assert(patch2.getSize() <= 0x23);
+		struct Patch2NoStaff : Xbyak::CodeGenerator
+		{
+			Patch2NoStaff()
+			{
+				mov(rbx, r13);
+				test(
+					dword[rbx + offsetof(Menu::CategoryListEntry, filterFlag)],
+					~(FilterFlag::EffectWeapon | FilterFlag::EffectSpecial));
+			}
+		};
 
 		REL::safe_fill(hook1.address(), REL::NOP, 0x8);
-		REL::safe_write(hook1.address(), patch1.getCode(), patch1.getSize());
 		REL::safe_fill(hook2.address(), REL::NOP, 0x23);
-		REL::safe_write(hook2.address(), patch2.getCode(), patch2.getSize());
+
+		if (!Settings::INISettings::GetSingleton()->bStaffChargeEnabled) {
+			_loggerInfo("Staff enchanting charge disabled.");
+			Patch1NoStaff patch1NoStaff{};
+			assert(patch1NoStaff.getSize() <= 0x8);
+			Patch2NoStaff patch2NoStaff{};
+			assert(patch2NoStaff.getSize() <= 0x23);
+			patch1NoStaff.ready();
+			patch2NoStaff.ready();
+			REL::safe_write(hook1.address(), patch1NoStaff.getCode(), patch1NoStaff.getSize());
+			REL::safe_write(hook2.address(), patch2NoStaff.getCode(), patch2NoStaff.getSize());
+		}
+		else {
+			_loggerInfo("Staff enchanting charge enabled.");
+			Patch1 patch1{};
+			assert(patch1.getSize() <= 0x8);
+			Patch2 patch2{};
+			assert(patch2.getSize() <= 0x23);
+			patch1.ready();
+			patch2.ready();
+			REL::safe_write(hook1.address(), patch1.getCode(), patch1.getSize());
+			REL::safe_write(hook2.address(), patch2.getCode(), patch2.getSize());
+		}
 		// the flag checks here just get in the way, so nop them
 		REL::safe_fill(hook3.address(), REL::NOP, 0x6);
 		REL::safe_fill(hook4.address(), REL::NOP, 0xA);
@@ -449,7 +483,7 @@ namespace Hooks
 				if (!baseEffect)
 					a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::None);
 
-				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectSpecial);
+				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectStaff);
 				//Regarding the following block: Early in development, you could have multiple
 				//enchantments on a single staff. After discovering the Ice Storm of Paralysis
 				//staff, I decided "fuck that". This will stay here in case I figure out a proper
