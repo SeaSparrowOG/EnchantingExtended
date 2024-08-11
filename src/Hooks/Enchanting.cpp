@@ -207,7 +207,7 @@ namespace Hooks
 		_availableCount = a_menu->selected.item
 			? static_cast<std::uint16_t>(a_menu->selected.item->data->countDelta)
 			: 0;
-		
+
 		auto* itemChangeEntry = a_menu->selected.item.get();
 		auto* entryData = itemChangeEntry ? itemChangeEntry->data : nullptr;
 		auto* boundObject = entryData ? entryData->object : nullptr;
@@ -231,8 +231,6 @@ namespace Hooks
 				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
 				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
 				return enchantment;
-				//return Data::CreatedObjectManager::GetSingleton()->CreateStaffEnchantment(
-					//a_menu->createEffectFunctor.createdEffects);
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
 				a_menu->createEffectFunctor.createdEffects);
@@ -358,6 +356,18 @@ namespace Hooks
 		else if (const auto* staff = a_item->As<RE::TESObjectWEAP>();
 				 staff ? staff->IsStaff() : false) {
 			a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
+			float weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
+				RE::ActorValue::kEnchanting) / 4.0f;
+
+			if (weightedEnchanting <= 10.0f) {
+				weightedEnchanting = 10.0f;
+			}
+			else if (weightedEnchanting > 25.0f) {
+				weightedEnchanting = 25.0f;
+			}
+
+			weightedEnchanting = weightedEnchanting / 25.0f;
+			a_value *= weightedEnchanting;
 		}
 	}
 }
