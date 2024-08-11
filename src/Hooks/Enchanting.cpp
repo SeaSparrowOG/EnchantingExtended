@@ -224,8 +224,15 @@ namespace Hooks
 		case RE::FormType::Weapon:
 			_creatingCount = 1;
 			if (isStaff) {
-				return Data::CreatedObjectManager::GetSingleton()->CreateStaffEnchantment(
-					a_menu->createEffectFunctor.createdEffects);
+				auto* enchantment = RE::BGSCreatedObjectManager::GetSingleton()
+					->AddWeaponEnchantment(a_menu->createEffectFunctor.createdEffects);
+				auto* costliest = enchantment->GetCostliestEffectItem();
+				enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
+				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
+				return enchantment;
+				//return Data::CreatedObjectManager::GetSingleton()->CreateStaffEnchantment(
+					//a_menu->createEffectFunctor.createdEffects);
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
 				a_menu->createEffectFunctor.createdEffects);

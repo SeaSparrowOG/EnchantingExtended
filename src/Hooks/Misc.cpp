@@ -169,6 +169,17 @@ namespace Hooks
 				a_exEnchantment,
 				a_formID);
 		}
+		else {
+			auto* costliest = enchantment->GetCostliestEffectItem()->baseEffect;
+			if (costliest->data.delivery == RE::MagicSystem::Delivery::kTouch ||
+				costliest->data.castingType == RE::MagicSystem::CastingType::kConstantEffect) {
+				return enchantment;
+			}
+
+			enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+			enchantment->SetDelivery(costliest->data.delivery);
+			enchantment->SetCastingType(costliest->data.castingType);
+		}
 
 		return enchantment;
 	}
