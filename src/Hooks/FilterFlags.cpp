@@ -567,7 +567,8 @@ namespace Hooks
 		if (!ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench()) {
 			return (
 				(a_item->GetDelivery() == RE::MagicSystem::Delivery::kSelf &&
-				 a_item->GetCastingType() == RE::MagicSystem::CastingType::kConstantEffect) ||
+				 a_item->GetCastingType() == RE::MagicSystem::CastingType::kConstantEffect)
+				||
 				(a_item->GetDelivery() == RE::MagicSystem::Delivery::kTouch &&
 				 a_item->GetCastingType() == RE::MagicSystem::CastingType::kFireAndForget));
 		}

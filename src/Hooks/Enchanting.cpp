@@ -382,7 +382,8 @@ namespace Hooks
 			a_value *= Settings::INISettings::GetSingleton()->fAmmoChargeMult;
 		}
 		else if (a_item && a_item->IsWeapon()) {
-			if (const auto* weap = a_item->As<RE::TESObjectWEAP>(); weap->IsStaff()) {
+			const auto* weap = a_item->As<RE::TESObjectWEAP>();
+			if (weap->IsStaff()) {
 				a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
 				float weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
 											   RE::ActorValue::kEnchanting) /
