@@ -59,10 +59,10 @@ namespace
 void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 {
 	switch (a_message->type) {
-	case SKSE::MessagingInterface::kPreLoadGame:
-		break;
 	case SKSE::MessagingInterface::kDataLoaded:
-		HandleEnchantingTables();
+		if (Settings::INISettings::GetSingleton()->bAdjustStaffEnchanters) {
+			HandleEnchantingTables();
+		}
 		break;
 	default:
 		break;

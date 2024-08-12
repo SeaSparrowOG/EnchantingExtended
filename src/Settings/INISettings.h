@@ -15,6 +15,7 @@ namespace Settings
 
 		void LoadSettings();
 
+		bool bAdjustStaffEnchanters;
 		bool bStaffChargeEnabled;
 		float fStaffChargeMult;
 		float fAmmoChargeMult;
