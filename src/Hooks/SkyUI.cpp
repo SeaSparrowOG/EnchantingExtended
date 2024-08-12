@@ -140,7 +140,11 @@ namespace Hooks
 			a_dataContainer->SetMember("weight", form->GetWeight());
 			a_dataContainer->SetMember("isStolen", !data->IsOwnedBy(player));
 
-			if (const auto ammo = form->As<RE::TESAmmo>()) {
+			if (const auto* staff = form->As<RE::TESObjectWEAP>();
+				staff ? staff->IsStaff() : false) {
+				//TODO: Probably set the staff flag here.
+			}
+			else if (const auto ammo = form->As<RE::TESAmmo>()) {
 				a_dataContainer->SetMember("flags", ammo->data.flags.underlying());
 				a_dataContainer->SetMember("damage", player->GetDamage(data));
 
@@ -156,6 +160,7 @@ namespace Hooks
 			}
 		} break;
 
+		case FilterFlag::EffectStaff:
 		case FilterFlag::EffectSpecial:
 		{
 			const auto entry = static_cast<Menu::EnchantmentEntry*>(a_entry);
