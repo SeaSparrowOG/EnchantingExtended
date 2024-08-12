@@ -564,8 +564,13 @@ namespace Hooks
 
 	bool FilterFlags::EvaluateEnchantment(RE::EnchantmentItem* a_item)
 	{
-		if (!ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench())
-			return false;
+		if (!ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench()) {
+			return (
+				(a_item->GetDelivery() == RE::MagicSystem::Delivery::kSelf &&
+				 a_item->GetCastingType() == RE::MagicSystem::CastingType::kConstantEffect) ||
+				(a_item->GetDelivery() == RE::MagicSystem::Delivery::kTouch &&
+				 a_item->GetCastingType() == RE::MagicSystem::CastingType::kFireAndForget));
+		}
 
 		auto casting_type = a_item->GetCastingType();
 		auto deliver_type = a_item->GetDelivery();
@@ -577,7 +582,7 @@ namespace Hooks
 			break;
 
 		default:
-			return false;
+			break;
 		}
 
 		switch (deliver_type)

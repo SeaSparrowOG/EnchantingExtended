@@ -231,16 +231,15 @@ namespace Hooks
 				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
 				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
 
-				float weightedEnchanting = 10.0f;
+				float weightedEnchanting = 1.0f;
 				weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
-					RE::ActorValue::kEnchanting) / 4.0f;
-				if (weightedEnchanting < 10.0f) {
-					weightedEnchanting = 10.0f;
+					RE::ActorValue::kEnchanting) / 100.0f;
+				if (weightedEnchanting < 0.25f) {
+					weightedEnchanting = 0.25f;
 				}
-				else if (weightedEnchanting > 25.0f) {
-					weightedEnchanting = 25.0f;
+				else if (weightedEnchanting > 1.0f) {
+					weightedEnchanting = 1.0f;
 				}
-				weightedEnchanting /= 25.0f;
 
 				auto& effects = enchantment->effects;
 				for (auto* effect : effects) {
@@ -382,21 +381,21 @@ namespace Hooks
 		if (Data::CreatedObjectManager::GetSingleton()->IsBaseAmmoEnchantment(a_enchantment)) {
 			a_value *= Settings::INISettings::GetSingleton()->fAmmoChargeMult;
 		}
-		else if (const auto* staff = a_item->As<RE::TESObjectWEAP>();
-				 staff ? staff->IsStaff() : false) {
-			a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
-			float weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
-				RE::ActorValue::kEnchanting) / 4.0f;
+		else if (a_item && a_item->IsWeapon()) {
+			if (const auto* weap = a_item->As<RE::TESObjectWEAP>(); weap->IsStaff()) {
+				a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
+				float weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
+											   RE::ActorValue::kEnchanting) /
+					100.0f;  // percent, linear
 
-			if (weightedEnchanting <= 10.0f) {
-				weightedEnchanting = 10.0f;
+				if (weightedEnchanting < 0.25f) {
+					weightedEnchanting = 0.25f;
+				}
+				else if (weightedEnchanting > 1.0f) {
+					weightedEnchanting = 1.0f;
+				}
+				a_value *= weightedEnchanting;
 			}
-			else if (weightedEnchanting > 25.0f) {
-				weightedEnchanting = 25.0f;
-			}
-
-			weightedEnchanting = weightedEnchanting / 25.0f;
-			a_value *= weightedEnchanting;
 		}
 	}
 }
