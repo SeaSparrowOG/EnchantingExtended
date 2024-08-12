@@ -230,6 +230,35 @@ namespace Hooks
 				enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
 				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
 				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
+
+				float weightedEnchanting = 10.0f;
+				weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
+					RE::ActorValue::kEnchanting) / 4.0f;
+				if (weightedEnchanting < 10.0f) {
+					weightedEnchanting = 10.0f;
+				}
+				else if (weightedEnchanting > 25.0f) {
+					weightedEnchanting = 25.0f;
+				}
+				weightedEnchanting /= 25.0f;
+
+				auto& effects = enchantment->effects;
+				for (auto* effect : effects) {
+					auto* baseEffect = effect->baseEffect;
+					if (!baseEffect) {
+						continue;
+					}
+
+					if (baseEffect->data.flags.any(
+							RE::EffectSetting::EffectSettingData::Flag::kPowerAffectsDuration)) {
+						effect->effectItem.duration *= weightedEnchanting;
+					}
+
+					if (baseEffect->data.flags.any(
+							RE::EffectSetting::EffectSettingData::Flag::kPowerAffectsDuration)) {
+						effect->effectItem.duration *= weightedEnchanting;
+					}
+				}
 				return enchantment;
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
