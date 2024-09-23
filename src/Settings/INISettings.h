@@ -15,11 +15,8 @@ namespace Settings
 
 		void LoadSettings();
 
-<<<<<<< HEAD
-=======
 		bool bAdjustStaffEnchanters;
 		bool bStaffChargeEnabled;
->>>>>>> 02cd8f9481aef4abd753ea4f99bf67da4da2c18a
 		float fStaffChargeMult;
 		float fAmmoChargeMult;
 		float fAmmoEffectCostMult;

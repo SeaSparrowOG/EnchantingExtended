@@ -381,11 +381,6 @@ namespace Hooks
 		if (Data::CreatedObjectManager::GetSingleton()->IsBaseAmmoEnchantment(a_enchantment)) {
 			a_value *= Settings::INISettings::GetSingleton()->fAmmoChargeMult;
 		}
-<<<<<<< HEAD
-		else if (const auto* staff = a_item->As<RE::TESObjectWEAP>();
-				 staff ? staff->IsStaff() : false) {
-			a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
-=======
 		else if (a_item && a_item->IsWeapon()) {
 			const auto* weap = a_item->As<RE::TESObjectWEAP>();
 			if (weap->IsStaff()) {
@@ -402,7 +397,6 @@ namespace Hooks
 				}
 				a_value *= weightedEnchanting;
 			}
->>>>>>> 02cd8f9481aef4abd753ea4f99bf67da4da2c18a
 		}
 	}
 }
