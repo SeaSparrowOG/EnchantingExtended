@@ -19,8 +19,6 @@ namespace Data
 
 		RE::EnchantmentItem* CreateAmmoEnchantment(const RE::BSTArray<RE::Effect>& a_effects);
 
-		RE::EnchantmentItem* CreateStaffEnchantment(const RE::BSTArray<RE::Effect>& a_effects);
-
 		bool IsBaseAmmoEnchantment(RE::EnchantmentItem* a_enchantment) const;
 
 		RE::BGSExplosion* GetExplosion(RE::EnchantmentItem* a_enchantment) const;

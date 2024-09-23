@@ -1,6 +1,6 @@
-[submodule "extern/commonlibsse"]
-	path = extern/commonlibsse
-	url = https://github.com/SeaSparrowOG/CommonLibSSE
-[submodule "Extern/CommonlibSSE"]
-	path = Extern/CommonlibSSE
-	url = https://github.com/SeaSparrowOG/CommonLibSSE
+[submodule "Tools/BethesdaCMakeModules"]
+	path = Tools/BethesdaCMakeModules
+	url = https://github.com/Exit-9B/BethesdaCMakeModules.git
+[submodule "Tools/SKSE-CMakeModules.git"]
+	path = Tools/SKSE-CMakeModules.git
+	url = https://github.com/Exit-9B/SKSE-CMakeModules.git

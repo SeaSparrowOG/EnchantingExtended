@@ -59,26 +59,6 @@ namespace Data
 				return false;
 			}
 		}
-
-		//Also save staff enchantments
-
-		if (!a_intfc->WriteRecordData(staffEnchantments.size())) {
-			_loggerError("Failed to write size of staffEnchantments");
-			return false;
-		}
-
-		for (const auto& entry : staffEnchantments) {
-			if (!a_intfc->WriteRecordData(static_cast<std::uint32_t>(entry.refCount))) {
-				_loggerError("Failed to write refCount ({})", entry.magicItem->formID);
-				return false;
-			}
-
-			if (!SaveEnchantment(entry.magicItem, a_intfc)) {
-				_loggerError("Failed to save enchantment");
-				return false;
-			}
-		}
-
 		return true;
 	}
 
@@ -190,62 +170,8 @@ namespace Data
 			createdExplosions.insert({ enchantment, explosion });
 		}
 
-		//Also load staff enchantments
-
-		RE::BSTArrayBase::size_type staffEnchantmentsSize;
-		if (!a_intfc->ReadRecordData(staffEnchantmentsSize)) {
-			_loggerError("Failed to read size of staffEnchantments");
-			return false;
-		}
-
-		for (RE::BSTArrayBase::size_type i = 0; i < staffEnchantmentsSize; i++) {
-			EnchantmentEntry entry{};
-
-			std::uint32_t refCount;
-			if (!a_intfc->ReadRecordData(refCount)) {
-				_loggerError("Failed to read refCount");
-				return false;
-			}
-
-			entry.refCount = refCount;
-
-			RE::EnchantmentItem* enchantment;
-			if (!LoadEnchantment(enchantment, a_intfc)) {
-				_loggerError("Failed to load enchantment");
-				return false;
-			}
-
-			const auto costliestEffect = enchantment->GetCostliestEffectItem()->baseEffect;
-			if (!costliestEffect) {
-				_loggerError(
-					"Failed to look up base effect of enchantment ({:08X})",
-					enchantment->formID);
-			}
-
-			entry.magicItem = enchantment;
-
-			staffEnchantments.push_back(std::move(entry));
-		}
-
-		//Finally, resolve the enchantments.
-		//Since the created enchantments are not saved in the main save, we first
-		//have to load them from Misc.cpp's load handler here, and try to resolve them
-		//after we have created the relevant enchantments above.
-
 		for (auto& [exEnchantment, formID] : failedFormLoads) {
-			auto* candidateEnchantment = RE::TESForm::LookupByID<RE::EnchantmentItem>(formID);
-			auto* costliestEffect = candidateEnchantment ? candidateEnchantment->GetCostliestEffectItem() : nullptr;
-			auto* baseEffect = costliestEffect ? costliestEffect->baseEffect : nullptr;
-			if (!baseEffect) {
-				_loggerError("Failed to find an enchantment.");
-				continue;
-			}
-
-			candidateEnchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
-			candidateEnchantment->data.delivery = baseEffect->data.delivery;
-			candidateEnchantment->data.castingType = baseEffect->data.castingType;
-
-			exEnchantment->enchantment = candidateEnchantment;
+			exEnchantment->enchantment = RE::TESForm::LookupByID<RE::EnchantmentItem>(formID);
 		}
 		failedFormLoads.clear();
 

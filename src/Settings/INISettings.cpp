@@ -14,6 +14,15 @@ namespace Settings
 		ini.SetUnicode();
 		ini.LoadFile(fmt::format(R"(.\Data\SKSE\Plugins\{}.ini)", Version::NAME).c_str());
 
+<<<<<<< HEAD
+=======
+		bAdjustStaffEnchanters = static_cast<bool>(
+			ini.GetBoolValue("StaffEnchanting", "bAdjustStaffEnchanters", false));
+
+		bStaffChargeEnabled = static_cast<bool>(
+			ini.GetBoolValue("StaffEnchanting", "bStaffChargeEnabled", false));
+
+>>>>>>> 02cd8f9481aef4abd753ea4f99bf67da4da2c18a
 		fStaffChargeMult = static_cast<float>(
 			ini.GetDoubleValue("StaffEnchanting", "fStaffChargeMult", 10.0));
 

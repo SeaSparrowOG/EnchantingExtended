@@ -207,7 +207,7 @@ namespace Hooks
 		_availableCount = a_menu->selected.item
 			? static_cast<std::uint16_t>(a_menu->selected.item->data->countDelta)
 			: 0;
-		
+
 		auto* itemChangeEntry = a_menu->selected.item.get();
 		auto* entryData = itemChangeEntry ? itemChangeEntry->data : nullptr;
 		auto* boundObject = entryData ? entryData->object : nullptr;
@@ -224,8 +224,41 @@ namespace Hooks
 		case RE::FormType::Weapon:
 			_creatingCount = 1;
 			if (isStaff) {
-				return Data::CreatedObjectManager::GetSingleton()->CreateStaffEnchantment(
-					a_menu->createEffectFunctor.createdEffects);
+				auto* enchantment = RE::BGSCreatedObjectManager::GetSingleton()
+					->AddWeaponEnchantment(a_menu->createEffectFunctor.createdEffects);
+				auto* costliest = enchantment->GetCostliestEffectItem();
+				enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
+				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
+
+				float weightedEnchanting = 1.0f;
+				weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
+					RE::ActorValue::kEnchanting) / 100.0f;
+				if (weightedEnchanting < 0.25f) {
+					weightedEnchanting = 0.25f;
+				}
+				else if (weightedEnchanting > 1.0f) {
+					weightedEnchanting = 1.0f;
+				}
+
+				auto& effects = enchantment->effects;
+				for (auto* effect : effects) {
+					auto* baseEffect = effect->baseEffect;
+					if (!baseEffect) {
+						continue;
+					}
+
+					if (baseEffect->data.flags.any(
+							RE::EffectSetting::EffectSettingData::Flag::kPowerAffectsDuration)) {
+						effect->effectItem.duration *= weightedEnchanting;
+					}
+
+					if (baseEffect->data.flags.any(
+							RE::EffectSetting::EffectSettingData::Flag::kPowerAffectsDuration)) {
+						effect->effectItem.duration *= weightedEnchanting;
+					}
+				}
+				return enchantment;
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
 				a_menu->createEffectFunctor.createdEffects);
@@ -348,9 +381,28 @@ namespace Hooks
 		if (Data::CreatedObjectManager::GetSingleton()->IsBaseAmmoEnchantment(a_enchantment)) {
 			a_value *= Settings::INISettings::GetSingleton()->fAmmoChargeMult;
 		}
+<<<<<<< HEAD
 		else if (const auto* staff = a_item->As<RE::TESObjectWEAP>();
 				 staff ? staff->IsStaff() : false) {
 			a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
+=======
+		else if (a_item && a_item->IsWeapon()) {
+			const auto* weap = a_item->As<RE::TESObjectWEAP>();
+			if (weap->IsStaff()) {
+				a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
+				float weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
+											   RE::ActorValue::kEnchanting) /
+					100.0f;  // percent, linear
+
+				if (weightedEnchanting < 0.25f) {
+					weightedEnchanting = 0.25f;
+				}
+				else if (weightedEnchanting > 1.0f) {
+					weightedEnchanting = 1.0f;
+				}
+				a_value *= weightedEnchanting;
+			}
+>>>>>>> 02cd8f9481aef4abd753ea4f99bf67da4da2c18a
 		}
 	}
 }
