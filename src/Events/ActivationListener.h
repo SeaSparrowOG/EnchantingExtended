@@ -16,8 +16,11 @@ namespace ActivationListener
 		RE::BSEventNotifyControl ProcessEvent(
 			const RE::TESFurnitureEvent* a_event,
 			RE::BSTEventSource<RE::TESFurnitureEvent>*) override;
+		bool ReadSettings();
 
 		bool isInValidStaffWorkbench{ false };
 		bool isInValidAmmoWorkbench{ true };
+
+		std::unordered_map<RE::SpellItem*, RE::EnchantmentItem*> spellEnchantments;
 	};
 }
