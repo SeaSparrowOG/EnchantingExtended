@@ -624,9 +624,7 @@ namespace Hooks
 				else if (!a_entry->IsEnchanted()) {
 					return FilterFlag::EnchantSpecial;
 				}
-				else {
-					return FilterFlag::DisenchantSpecial;
-				}
+				return FilterFlag::None;
 			}
 			else if (const auto soulGem = object->As<RE::TESSoulGem>()) {
 				if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {

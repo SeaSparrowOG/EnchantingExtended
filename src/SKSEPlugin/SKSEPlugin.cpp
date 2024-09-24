@@ -63,6 +63,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 		if (Settings::INISettings::GetSingleton()->bAdjustStaffEnchanters) {
 			HandleEnchantingTables();
 		}
+		ActivationListener::EnchantingTable::GetSingleton()->RegisterListener();
 		break;
 	default:
 		break;
@@ -119,8 +120,6 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	const auto papyrus = SKSE::GetPapyrusInterface();
 	papyrus->Register(&Papyrus::AmmoEnchanting::RegisterFuncs);
 	
-	_loggerInfo("Modifying staff enchanters...");
-	ActivationListener::EnchantingTable::GetSingleton()->RegisterListener();
 	auto messaging = SKSE::GetMessagingInterface();
 	messaging->RegisterListener(MessageHandler);
 	_loggerInfo("Finished startup tasks.");

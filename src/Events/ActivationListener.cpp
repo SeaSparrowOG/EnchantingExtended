@@ -72,6 +72,30 @@ namespace ActivationListener
 		if (eventFurniture->HasKeywordString("DLC2StaffEnchanter"sv)) {
 			isInValidStaffWorkbench = isEntering;
 		}
+
+		if (!isEntering)
+			continueEvent;
+
+		auto* playerREF = RE::PlayerCharacter::GetSingleton();
+		for (auto& pair : spellEnchantments) {
+			auto* spell = pair.first;
+			auto* enchant = pair.second;
+
+			if (!playerREF->HasSpell(spell)) {
+				enchant->formFlags &= ~RE::TESForm::RecordFlags::kKnown;
+				enchant->AddChange(RE::TESForm::ChangeFlags::kFlags);
+				continueEvent;
+			}
+
+			enchant->effects = spell->effects;
+			enchant->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+			enchant->SetDelivery(spell->GetDelivery());
+			enchant->SetCastingType(spell->GetCastingType());
+			enchant->fullName = spell->fullName;
+
+			enchant->formFlags |= RE::TESForm::RecordFlags::kKnown;
+			enchant->AddChange(RE::TESForm::ChangeFlags::kFlags);
+		}
 		continueEvent;
 	}
 
@@ -120,8 +144,8 @@ namespace ActivationListener
 						"Couldn't resolve a form in {}:\n    >Name: {}\n    >Key: {}\n    >Value: {}",
 						config,
 						identifier,
-						key ? "KEY MISSING" : _debugEDID(key),
-						value ? "VALUE MISSING" : _debugEDID(value));
+						!key ? "KEY MISSING" : _debugEDID(key),
+						!value ? "VALUE MISSING" : _debugEDID(value));
 					continue;
 				}
 
@@ -132,8 +156,8 @@ namespace ActivationListener
 						"Forms in {} exist, but are of unexpected type:\n    >Name: {}\n    >Key: {}\n    >Value: {}",
 						config,
 						identifier,
-						keySpell ? "KEY MISSING" : _debugEDID(keySpell),
-						valueSpell ? "VALUE MISSING" : _debugEDID(valueSpell));
+						!keySpell ? "KEY MISSING" : _debugEDID(keySpell),
+						!valueSpell ? "VALUE MISSING" : _debugEDID(valueSpell));
 					continue;
 				}
 
