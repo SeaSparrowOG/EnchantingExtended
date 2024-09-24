@@ -231,33 +231,19 @@ namespace Hooks
 				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
 				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
 
-				float weightedEnchanting = 1.0f;
-				weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
-					RE::ActorValue::kEnchanting) / 100.0f;
-				if (weightedEnchanting < 0.25f) {
-					weightedEnchanting = 0.25f;
-				}
-				else if (weightedEnchanting > 1.0f) {
-					weightedEnchanting = 1.0f;
-				}
-
 				auto& effects = enchantment->effects;
+				float chargeTime = 0.5f;
 				for (auto* effect : effects) {
 					auto* baseEffect = effect->baseEffect;
 					if (!baseEffect) {
 						continue;
 					}
-
-					if (baseEffect->data.flags.any(
-							RE::EffectSetting::EffectSettingData::Flag::kPowerAffectsDuration)) {
-						effect->effectItem.duration *= weightedEnchanting;
-					}
-
-					if (baseEffect->data.flags.any(
-							RE::EffectSetting::EffectSettingData::Flag::kPowerAffectsDuration)) {
-						effect->effectItem.duration *= weightedEnchanting;
-					}
+					chargeTime = chargeTime > baseEffect->data.spellmakingChargeTime
+						? chargeTime
+						: baseEffect->data.spellmakingChargeTime;
 				}
+
+				enchantment->data.chargeTime = chargeTime;
 				return enchantment;
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
