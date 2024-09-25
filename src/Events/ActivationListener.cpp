@@ -79,7 +79,7 @@ namespace ActivationListener
 		auto* playerREF = RE::PlayerCharacter::GetSingleton();
 		for (auto& pair : spellEnchantments) {
 			auto* spell = pair.first;
-			auto* enchant = pair.second;
+			auto* enchant = pair.second.enchantment;
 
 			if (!playerREF->HasSpell(spell)) {
 				enchant->formFlags &= ~RE::TESForm::RecordFlags::kKnown;
@@ -121,47 +121,81 @@ namespace ActivationListener
 			Json::Value JSONFile;
 			JSONReader.parse(rawJSON, JSONFile);
 
-			if (!JSONFile.isObject()) {
-				_loggerInfo("Warning: {} is not an object.", config);
+			if (!JSONFile.isArray()) {
+				_loggerInfo("Warning: {} is not an array.", config);
 				continue;
 			}
 
-			auto members = JSONFile.getMemberNames();
-			for (auto& identifier : members) {
-				auto& member = JSONFile[identifier];
-				if (!member || !member.isString()) {
-					_loggerInfo(
-						"Warning: caught bad member for {}:\n     >{}",
-						config,
-						identifier);
+			for (auto& object : JSONFile) {
+				if (!object.isObject()) {
+					_loggerInfo("At least one entry in {} is not an object.", config);
 					continue;
 				}
 
-				auto* key = ParseForm(identifier);
-				auto* value = ParseForm(member.asString());
-				if (!(key && value)) {
-					_loggerInfo(
-						"Couldn't resolve a form in {}:\n    >Name: {}\n    >Key: {}\n    >Value: {}",
-						config,
-						identifier,
-						!key ? "KEY MISSING" : _debugEDID(key),
-						!value ? "VALUE MISSING" : _debugEDID(value));
+				auto& objectInfo = object["Matches"];
+				if (!objectInfo || !objectInfo.isArray()) {
+					_loggerInfo("Missing or non-array entry in object in config file {}", config);
 					continue;
 				}
 
-				auto* keySpell = key->As<RE::SpellItem>();
-				auto* valueSpell = value->As<RE::EnchantmentItem>();
-				if (!(keySpell && valueSpell)) {
-					_loggerInfo(
-						"Forms in {} exist, but are of unexpected type:\n    >Name: {}\n    >Key: {}\n    >Value: {}",
-						config,
-						identifier,
-						!keySpell ? "KEY MISSING" : _debugEDID(keySpell),
-						!valueSpell ? "VALUE MISSING" : _debugEDID(valueSpell));
-					continue;
+				float chargeTime = 0.5;
+				if (auto& chargeField = object["DefaultChargeTime"]; chargeField.isDouble()) {
+					chargeTime = chargeField.asFloat() > 0.0f ? chargeField.asFloat() : chargeTime;
 				}
 
-				spellEnchantments[keySpell] = valueSpell;
+				uint32_t charges = 300;
+				if (auto& chargesField = object["DefaultCharges"]; chargesField.isUInt()) {
+					charges = chargesField.asUInt() > 0 ? chargesField.asUInt() : charges;
+				}
+
+				uint32_t chargeCost = 50;
+				if (auto& chargeCostField = object["DefaultCharges"]; chargeCostField.isUInt()) {
+					charges = chargeCostField.asUInt() > 0 ? chargeCostField.asUInt() : charges;
+				}
+
+				auto members = objectInfo.getMemberNames();
+				for (auto& identifier : members) {
+					auto& member = JSONFile[identifier];
+					if (!member || !member.isString()) {
+						_loggerInfo(
+							"Warning: caught bad member for {}:\n     >{}",
+							config,
+							identifier);
+						continue;
+					}
+
+					auto* key = ParseForm(identifier);
+					auto* value = ParseForm(member.asString());
+					if (!(key && value)) {
+						_loggerInfo(
+							"Couldn't resolve a form in {}:\n    >Name: {}\n    >Key: {}\n    "
+							">Value: {}",
+							config,
+							identifier,
+							!key ? "KEY MISSING" : _debugEDID(key),
+							!value ? "VALUE MISSING" : _debugEDID(value));
+						continue;
+					}
+
+					auto* keySpell = key->As<RE::SpellItem>();
+					auto* valueSpell = value->As<RE::EnchantmentItem>();
+					if (!(keySpell && valueSpell)) {
+						_loggerInfo(
+							"Forms in {} exist, but are of unexpected type:\n    >Name: {}\n    "
+							">Key: {}\n    >Value: {}",
+							config,
+							identifier,
+							!keySpell ? "KEY MISSING" : _debugEDID(keySpell),
+							!valueSpell ? "VALUE MISSING" : _debugEDID(valueSpell));
+						continue;
+					}
+
+					auto keyEnchantment = Enchantment(valueSpell);
+					keyEnchantment.charges = charges;
+					keyEnchantment.chargeTime = chargeTime;
+					keyEnchantment.cost = chargeCost;
+					spellEnchantments.emplace(keySpell, keyEnchantment);
+				}
 			}
 		}
 		return true;

@@ -13,6 +13,23 @@ namespace ActivationListener
 		bool IsInValidAmmoWorkbench();
 
 	private:
+		struct Enchantment
+		{
+			RE::EnchantmentItem* enchantment;
+			float chargeTime;
+			uint32_t charges;
+			uint32_t cost;
+
+			Enchantment() = delete;
+			Enchantment(RE::EnchantmentItem* a_template)
+			{
+				this->enchantment = a_template;
+				this->chargeTime = 0.5;
+				this->cost = 0;
+				this->charges = 0;
+			}
+		};
+
 		RE::BSEventNotifyControl ProcessEvent(
 			const RE::TESFurnitureEvent* a_event,
 			RE::BSTEventSource<RE::TESFurnitureEvent>*) override;
@@ -21,6 +38,6 @@ namespace ActivationListener
 		bool isInValidStaffWorkbench{ false };
 		bool isInValidAmmoWorkbench{ true };
 
-		std::unordered_map<RE::SpellItem*, RE::EnchantmentItem*> spellEnchantments;
+		std::unordered_map<RE::SpellItem*, Enchantment> spellEnchantments;
 	};
 }
