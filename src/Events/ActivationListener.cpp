@@ -46,6 +46,15 @@ namespace ActivationListener
 		return isInValidAmmoWorkbench;
 	}
 
+	Enchantment EnchantingTable::GetEnchantmentInfo(RE::EnchantmentItem* a_enchantment)
+	{
+		for (auto& pair : spellEnchantments) {
+			if (pair.second.enchantment == a_enchantment) {
+				return pair.second;
+			}
+		}
+	}
+
 	RE::BSEventNotifyControl EnchantingTable::ProcessEvent(
 		const RE::TESFurnitureEvent* a_event,
 		RE::BSTEventSource<RE::TESFurnitureEvent>*)
@@ -133,7 +142,7 @@ namespace ActivationListener
 				}
 
 				auto& objectInfo = object["Matches"];
-				if (!objectInfo || !objectInfo.isArray()) {
+				if (!objectInfo || !objectInfo.isObject()) {
 					_loggerInfo("Missing or non-array entry in object in config file {}", config);
 					continue;
 				}
@@ -155,7 +164,7 @@ namespace ActivationListener
 
 				auto members = objectInfo.getMemberNames();
 				for (auto& identifier : members) {
-					auto& member = JSONFile[identifier];
+					auto& member = objectInfo[identifier];
 					if (!member || !member.isString()) {
 						_loggerInfo(
 							"Warning: caught bad member for {}:\n     >{}",

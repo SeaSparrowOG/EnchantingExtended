@@ -2,6 +2,7 @@
 
 #include "Data/CreatedObjectManager.h"
 #include "Data/EnchantArtManager.h"
+#include "Events/ActivationListener.h"
 #include "Ext/EnchantConstructMenu.h"
 #include "RE/Offset.h"
 #include "Settings/INISettings.h"
@@ -224,26 +225,20 @@ namespace Hooks
 		case RE::FormType::Weapon:
 			_creatingCount = 1;
 			if (isStaff) {
+				auto* chosenEnchantment = a_menu->selected.effects.begin()->get()->data;
+				ActivationListener::Enchantment
+					chosenTemplate = ActivationListener::EnchantingTable::GetSingleton()
+										 ->GetEnchantmentInfo(chosenEnchantment);
+
 				auto* enchantment = RE::BGSCreatedObjectManager::GetSingleton()
 					->AddWeaponEnchantment(a_menu->createEffectFunctor.createdEffects);
 				auto* costliest = enchantment->GetCostliestEffectItem();
 				enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
 				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
 				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
-
-				auto& effects = enchantment->effects;
-				float chargeTime = 0.5f;
-				for (auto* effect : effects) {
-					auto* baseEffect = effect->baseEffect;
-					if (!baseEffect) {
-						continue;
-					}
-					chargeTime = chargeTime > baseEffect->data.spellmakingChargeTime
-						? chargeTime
-						: baseEffect->data.spellmakingChargeTime;
-				}
-
-				enchantment->data.chargeTime = chargeTime;
+				enchantment->data.chargeTime = chosenTemplate.chargeTime;
+				enchantment->data.chargeOverride = chosenTemplate.charges;
+				enchantment->data.costOverride = chosenTemplate.cost;
 				return enchantment;
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
@@ -366,23 +361,6 @@ namespace Hooks
 
 		if (Data::CreatedObjectManager::GetSingleton()->IsBaseAmmoEnchantment(a_enchantment)) {
 			a_value *= Settings::INISettings::GetSingleton()->fAmmoChargeMult;
-		}
-		else if (a_item && a_item->IsWeapon()) {
-			const auto* weap = a_item->As<RE::TESObjectWEAP>();
-			if (weap->IsStaff()) {
-				a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
-				float weightedEnchanting = RE::PlayerCharacter::GetSingleton()->GetActorValue(
-											   RE::ActorValue::kEnchanting) /
-					100.0f;  // percent, linear
-
-				if (weightedEnchanting < 0.25f) {
-					weightedEnchanting = 0.25f;
-				}
-				else if (weightedEnchanting > 1.0f) {
-					weightedEnchanting = 1.0f;
-				}
-				a_value *= weightedEnchanting;
-			}
 		}
 	}
 }
