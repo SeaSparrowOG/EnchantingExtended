@@ -25,6 +25,9 @@ namespace Hooks
 		// Remove correct ammo with ExtraData
 		static void UseAmmoPatch();
 
+		// Staff only: Get the best fitting effect for staves.
+		static void GetBestEffectForStavesOatch();
+
 		static void UnequipAmmoIfDifferent(
 			RE::AIProcess* a_process,
 			RE::TESAmmo* a_baseForm,
@@ -43,8 +46,11 @@ namespace Hooks
 
 		static std::int32_t UseAmmo(RE::PlayerCharacter* a_player, std::int32_t a_shotCount);
 
+		static RE::EffectSetting* StaffCost(RE::MagicItem* a_this);
+
 		inline static REL::Relocation<decltype(&GetCount)> _GetCount;
 		inline static REL::Relocation<decltype(&AddMessage)> _AddMessage;
 		inline static REL::Relocation<decltype(&UseAmmo)> _UseAmmo;
+		inline static REL::Relocation<decltype(&StaffCost)> _staffCost;
 	};
 }

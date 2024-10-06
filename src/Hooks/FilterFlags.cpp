@@ -483,68 +483,44 @@ namespace Hooks
 				if (!baseEffect)
 					a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::None);
 
-				a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::EffectStaff);
-				//Regarding the following block: Early in development, you could have multiple
-				//enchantments on a single staff. After discovering the Ice Storm of Paralysis
-				//staff, I decided "fuck that". This will stay here in case I figure out a proper
-				//way to implement this in the future.
-				/*
 				auto delivery = baseEffect->data.delivery;
 				auto casting = baseEffect->data.castingType;
-				switch (delivery) {
-				case RE::MagicSystem::Delivery::kAimed:
-					switch (casting) {
-					case RE::MagicSystem::CastingType::kConcentration:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcAimed);
-						break;
-					case RE::MagicSystem::CastingType::kFireAndForget:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFAimed);
-						break;
-					default:
-						break;
-					}
-					break;
-				case RE::MagicSystem::Delivery::kSelf:
-					switch (casting) {
-					case RE::MagicSystem::CastingType::kConcentration:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcSelf);
-						break;
-					case RE::MagicSystem::CastingType::kFireAndForget:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFSelf);
-						break;
-					default:
-						break;
-					}
-					break;
-				case RE::MagicSystem::Delivery::kTargetActor:
-
-					switch (casting) {
-					case RE::MagicSystem::CastingType::kConcentration:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcActor);
-						break;
-					case RE::MagicSystem::CastingType::kFireAndForget:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFActor);
-						break;
-					default:
-						break;
-					}
-					break;
-				case RE::MagicSystem::Delivery::kTargetLocation:
-					switch (casting) {
-					case RE::MagicSystem::CastingType::kConcentration:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcLocation);
-						break;
-					case RE::MagicSystem::CastingType::kFireAndForget:
-						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFLocation);
-						break;
-					default:
-						break;
-					}
-					break;
-				default:
-					break;
+				if (casting == RE::MagicSystem::CastingType::kConstantEffect ||
+					delivery == RE::MagicSystem::Delivery::kTouch) {
+					a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::None);
 				}
-				*/
+				else if (delivery == RE::MagicSystem::Delivery::kAimed) {
+					if (casting == RE::MagicSystem::CastingType::kFireAndForget) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFAimed);
+					}
+					else if (casting == RE::MagicSystem::CastingType::kConcentration) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcAimed);
+					}
+				}
+				else if (delivery == RE::MagicSystem::Delivery::kSelf) {
+					if (casting == RE::MagicSystem::CastingType::kFireAndForget) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFSelf);
+					}
+					else if (casting == RE::MagicSystem::CastingType::kConcentration) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcSelf);
+					}
+				}
+				else if (delivery == RE::MagicSystem::Delivery::kTargetActor) {
+					if (casting == RE::MagicSystem::CastingType::kFireAndForget) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFActor);
+					}
+					else if (casting == RE::MagicSystem::CastingType::kConcentration) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcActor);
+					}
+				}
+				else if (delivery == RE::MagicSystem::Delivery::kTargetLocation) {
+					if (casting == RE::MagicSystem::CastingType::kFireAndForget) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::FFLocation);
+					}
+					else if (casting == RE::MagicSystem::CastingType::kConcentration) {
+						a_entry->filterFlag = static_cast<Menu::FilterFlag>(FilterFlag::ConcLocation);
+					}
+				}
 			}
 			else if (manager->IsBaseAmmoEnchantment(a_entry->data)
 				&& ActivationListener::EnchantingTable::GetSingleton()->IsInValidAmmoWorkbench())
@@ -583,12 +559,11 @@ namespace Hooks
 			break;
 
 		default:
-			break;
+			return false;
 		}
 
 		switch (deliver_type)
 		{
-		case RE::MagicSystem::Delivery::kTouch:
 		case RE::MagicSystem::Delivery::kAimed:
 		case RE::MagicSystem::Delivery::kTargetActor:
 		case RE::MagicSystem::Delivery::kTargetLocation:
@@ -706,9 +681,6 @@ namespace Hooks
 		bool isInStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()
 									  ->IsInValidStaffWorkbench();
 		if (isInStaffEnchanter) {
-			filters = FilterFlag::All;
-			// Regarding this block: see the note about multiple enchantments.
-			/*
 			if (!a_selected->effects.empty()) {
 				filters |= FilterFlag::EnchantSpecial;
 				for (auto& selectedEffect : a_selected->effects) {
@@ -718,7 +690,6 @@ namespace Hooks
 			else {
 				filters = FilterFlag::All;
 			}
-			*/
 		}
 		else {
 

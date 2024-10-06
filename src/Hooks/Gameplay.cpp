@@ -15,6 +15,8 @@ namespace Hooks
 		LaunchProjectilePatch();
 		HUDAmmoPatch();
 		UseAmmoPatch();
+
+		GetBestEffectForStavesOatch();
 	}
 
 	void Gameplay::LaunchProjectilePatch()
@@ -115,6 +117,13 @@ namespace Hooks
 
 		auto& trampoline = SKSE::GetTrampoline();
 		_UseAmmo = trampoline.write_call<5>(hook.address(), &Gameplay::UseAmmo);
+	}
+
+	void Gameplay::GetBestEffectForStavesOatch()
+	{
+		static const auto hook = REL::Relocation<std::uintptr_t>(REL::ID(34450), 0x53);
+		auto& trampoline = SKSE::GetTrampoline();
+		_staffCost = trampoline.write_call<5>(hook.address(), &Gameplay::StaffCost);
 	}
 
 	void Gameplay::UnequipAmmoIfDifferent(
@@ -262,5 +271,142 @@ namespace Hooks
 			nullptr);
 
 		return invCount;
+	}
+
+	RE::EffectSetting* Gameplay::StaffCost(RE::MagicItem* a_this)
+	{
+		if (a_this->GetSpellType() == RE::MagicSystem::SpellType::kStaffEnchantment) {
+			RE::ActorValue lastSchool = RE::ActorValue::kNone;
+			RE::Effect* cheapest = nullptr;
+
+			float oldCostliestConjuration = -1.0f;
+			float oldCostliestIllusion = -1.0f;
+			float oldCostliestAlteration = -1.0f;
+			float oldCostliestRestoration = -1.0f;
+			float oldCostliestDestruction = -1.0f;
+			float oldCostliestNone = -1.0f;
+
+			for (auto* effect : a_this->effects) {
+				auto* baseEffect = effect->baseEffect;
+				if (!baseEffect)
+					continue;
+
+				auto* effectProjectile = baseEffect->data.projectileBase;
+				if (!effectProjectile)
+					continue;
+				auto effectAV = baseEffect->data.associatedSkill;
+				if (effectAV == RE::ActorValue::kNone)
+					continue;
+
+				switch (effectAV) {
+				case RE::ActorValue::kDestruction:
+				{
+					switch (lastSchool) {
+					case RE::ActorValue::kDestruction:
+					case RE::ActorValue::kRestoration:
+					case RE::ActorValue::kAlteration:
+					case RE::ActorValue::kIllusion:
+					case RE::ActorValue::kConjuration:
+					case RE::ActorValue::kNone:
+						if (effect->cost > oldCostliestDestruction) {
+							oldCostliestDestruction = effect->cost;
+							cheapest = effect;
+							lastSchool = RE::ActorValue::kDestruction;
+						}
+						break;
+					default:
+						break;
+					}
+
+				} break;
+				case RE::ActorValue::kRestoration:
+				{
+					switch (lastSchool) {
+					case RE::ActorValue::kRestoration:
+					case RE::ActorValue::kAlteration:
+					case RE::ActorValue::kIllusion:
+					case RE::ActorValue::kConjuration:
+					case RE::ActorValue::kNone:
+						if (effect->cost > oldCostliestRestoration) {
+							oldCostliestRestoration = effect->cost;
+							cheapest = effect;
+							lastSchool = RE::ActorValue::kRestoration;
+						}
+						break;
+					default:
+						break;
+					}
+				} break;
+				case RE::ActorValue::kAlteration:
+				{
+					switch (lastSchool) {
+					case RE::ActorValue::kAlteration:
+					case RE::ActorValue::kIllusion:
+					case RE::ActorValue::kConjuration:
+					case RE::ActorValue::kNone:
+						if (effect->cost > oldCostliestAlteration) {
+							oldCostliestAlteration = effect->cost;
+							cheapest = effect;
+							lastSchool = RE::ActorValue::kAlteration;
+						}
+						break;
+					default:
+						break;
+					}
+				} break;
+				case RE::ActorValue::kIllusion:
+				{
+					switch (lastSchool) {
+					case RE::ActorValue::kIllusion:
+					case RE::ActorValue::kConjuration:
+					case RE::ActorValue::kNone:
+						if (effect->cost > oldCostliestIllusion) {
+							oldCostliestIllusion = effect->cost;
+							cheapest = effect;
+							lastSchool = RE::ActorValue::kIllusion;
+						}
+						break;
+					default:
+						break;
+					}
+				} break;
+				case RE::ActorValue::kConjuration:
+				{
+					switch (lastSchool) {
+					case RE::ActorValue::kConjuration:
+					case RE::ActorValue::kNone:
+						if (effect->cost > oldCostliestConjuration) {
+							oldCostliestConjuration = effect->cost;
+							cheapest = effect;
+							lastSchool = RE::ActorValue::kConjuration;
+						}
+						break;
+					default:
+						break;
+					}
+				} break;
+				case RE::ActorValue::kNone:
+				{
+					switch (lastSchool) {
+					case RE::ActorValue::kNone:
+						if (effect->cost > oldCostliestNone) {
+							oldCostliestNone = effect->cost;
+							cheapest = effect;
+						}
+						break;
+					default:
+						break;
+					}
+				} break;
+				default:
+					break;
+				}
+			}
+
+			if (cheapest && cheapest->baseEffect->data.projectileBase) {
+				return cheapest->baseEffect;
+			}
+		}
+		return _staffCost(a_this);
 	}
 }

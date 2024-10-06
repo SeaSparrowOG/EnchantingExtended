@@ -1,6 +1,7 @@
 #include "EnchantConstructMenu.h"
 
 #include "Events/ActivationListener.h"
+#include "Settings/INISettings.h"
 #include <algorithm>
 
 namespace Ext
@@ -27,9 +28,10 @@ namespace Ext
 			}
 
 			if (!a_menu->selected.effects.empty()) {
-				return a_menu->selected.effects[0].get()->GetName() == entry.get()->GetName();
-				//Multiple enchantments on a single staff are kind of too good.
-				//return a_menu->selected.effects[0]->filterFlag.underlying() == filterFlag;
+				if (Settings::INISettings::GetSingleton()->bEnableMultiEnchantments) {
+					return a_menu->selected.effects[0]->filterFlag.underlying() == filterFlag;
+				}
+				return a_menu->selected.effects[0]->GetName() == entry.get()->GetName();
 			}
 			else {
 				return true;

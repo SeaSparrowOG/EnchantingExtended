@@ -17,6 +17,7 @@ namespace Settings
 
 		bool bAdjustStaffEnchanters;
 		bool bStaffChargeEnabled;
+		bool bEnableMultiEnchantments;
 		float fStaffChargeMult;
 		float fAmmoChargeMult;
 		float fAmmoEffectCostMult;

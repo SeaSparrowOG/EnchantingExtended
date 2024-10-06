@@ -20,6 +20,9 @@ namespace Settings
 		bStaffChargeEnabled = static_cast<bool>(
 			ini.GetBoolValue("StaffEnchanting", "bStaffChargeEnabled", false));
 
+		bEnableMultiEnchantments = static_cast<bool>(
+			ini.GetBoolValue("StaffEnchanting", "bEnableMultiEnchantments", false));
+
 		fStaffChargeMult = static_cast<float>(
 			ini.GetDoubleValue("StaffEnchanting", "fStaffChargeMult", 10.0));
 
