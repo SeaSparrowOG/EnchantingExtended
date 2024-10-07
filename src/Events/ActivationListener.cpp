@@ -6,11 +6,11 @@ namespace
 	{
 		if (const auto splitID = clib_util::string::split(a_identifier, "|");
 			splitID.size() == 2) {
-			if (!clib_util::string::is_only_hex(splitID[1]))
+			if (!clib_util::string::is_only_hex(splitID[0]))
 				return nullptr;
-			const auto formID = clib_util::string::to_num<RE::FormID>(splitID[1], true);
+			const auto formID = clib_util::string::to_num<RE::FormID>(splitID[0], true);
 
-			const auto& modName = splitID[0];
+			const auto& modName = splitID[1];
 			if (!RE::TESDataHandler::GetSingleton()->LookupModByName(modName))
 				return nullptr;
 
@@ -133,29 +133,32 @@ namespace ActivationListener
 				}
 
 				auto& objectInfo = object["Matches"];
-				if (!objectInfo || !objectInfo.isArray()) {
-					_loggerInfo("Missing or non-array entry in object in config file {}", config);
+				if (!objectInfo || !objectInfo.isObject()) {
+					_loggerInfo("Missing or non-object entry in object in config file {}", config);
 					continue;
 				}
 
-				float chargeTime = 0.5;
-				if (auto& chargeField = object["DefaultChargeTime"]; chargeField.isDouble()) {
-					chargeTime = chargeField.asFloat() > 0.0f ? chargeField.asFloat() : chargeTime;
-				}
-
-				uint32_t charges = 300;
+				uint32_t charges = 0;
 				if (auto& chargesField = object["DefaultCharges"]; chargesField.isUInt()) {
 					charges = chargesField.asUInt() > 0 ? chargesField.asUInt() : charges;
 				}
+				else {
+					_loggerInfo("MIssing required field DefaultCharges. Abortin load.");
+					continue;
+				}
 
-				uint32_t chargeCost = 50;
-				if (auto& chargeCostField = object["DefaultCharges"]; chargeCostField.isUInt()) {
-					charges = chargeCostField.asUInt() > 0 ? chargeCostField.asUInt() : charges;
+				uint32_t chargeCost = 0;
+				if (auto& chargeCostField = object["DefaultCost"]; chargeCostField.isUInt()) {
+					chargeCost = chargeCostField.asUInt() > 0 ? chargeCostField.asUInt() : charges;
+				}
+				else {
+					_loggerInfo("MIssing required field DefaultCost. Abortin load.");
+					continue;
 				}
 
 				auto members = objectInfo.getMemberNames();
 				for (auto& identifier : members) {
-					auto& member = JSONFile[identifier];
+					auto& member = objectInfo[identifier];
 					if (!member || !member.isString()) {
 						_loggerInfo(
 							"Warning: caught bad member for {}:\n     >{}",
@@ -192,7 +195,7 @@ namespace ActivationListener
 
 					auto keyEnchantment = Enchantment(valueSpell);
 					keyEnchantment.charges = charges;
-					keyEnchantment.chargeTime = chargeTime;
+					keyEnchantment.chargeTime = keySpell->GetChargeTime();
 					keyEnchantment.cost = chargeCost;
 					spellEnchantments.emplace(keySpell, keyEnchantment);
 				}
