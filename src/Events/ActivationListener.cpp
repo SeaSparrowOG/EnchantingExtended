@@ -110,7 +110,7 @@ namespace ActivationListener
 			if (!playerREF->HasSpell(spell)) {
 				enchant->formFlags &= ~RE::TESForm::RecordFlags::kKnown;
 				enchant->AddChange(RE::TESForm::ChangeFlags::kFlags);
-				continueEvent;
+				continue;
 			}
 
 			enchant->effects = spell->effects;
@@ -122,6 +122,7 @@ namespace ActivationListener
 			enchant->formFlags |= RE::TESForm::RecordFlags::kKnown;
 			enchant->AddChange(RE::TESForm::ChangeFlags::kFlags);
 		}
+		_loggerInfo("Player is in staff enchanter");
 		continueEvent;
 	}
 
@@ -253,6 +254,11 @@ namespace ActivationListener
 					spellEnchantments.emplace(keySpell, keyEnchantment);
 				}
 			}
+		}
+
+		_loggerInfo("Supported spells:");
+		for (auto& pair : this->spellEnchantments) {
+			_loggerInfo("     >{}", pair.first->GetName());
 		}
 		return true;
 	}
