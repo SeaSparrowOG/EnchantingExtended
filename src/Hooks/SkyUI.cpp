@@ -160,7 +160,14 @@ namespace Hooks
 			}
 		} break;
 
-		case FilterFlag::EffectStaff:
+		case FilterFlag::FFSelf:
+		case FilterFlag::FFAimed:
+		case FilterFlag::FFLocation:
+		case FilterFlag::FFActor:
+		case FilterFlag::ConcSelf:
+		case FilterFlag::ConcAimed:
+		case FilterFlag::ConcLocation:
+		case FilterFlag::ConcActor:
 		case FilterFlag::EffectSpecial:
 		{
 			const auto entry = static_cast<Menu::EnchantmentEntry*>(a_entry);
