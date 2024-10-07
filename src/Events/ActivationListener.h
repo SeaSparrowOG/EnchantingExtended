@@ -4,6 +4,23 @@ namespace ActivationListener
 {
 #define continueEvent return RE::BSEventNotifyControl::kContinue
 
+	struct Enchantment
+	{
+		RE::EnchantmentItem* enchantment;
+		float chargeTime;
+		uint32_t charges;
+		uint32_t cost;
+
+		Enchantment() = delete;
+		Enchantment(RE::EnchantmentItem* a_template)
+		{
+			this->enchantment = a_template;
+			this->chargeTime = 0.5;
+			this->cost = 0;
+			this->charges = 0;
+		}
+	};
+
 	class EnchantingTable : public ISingleton<EnchantingTable>,
 		public RE::BSTEventSink<RE::TESFurnitureEvent>
 	{
@@ -11,25 +28,9 @@ namespace ActivationListener
 		bool RegisterListener();
 		bool IsInValidStaffWorkbench();
 		bool IsInValidAmmoWorkbench();
+		Enchantment GetEnchantmentInfo(RE::EnchantmentItem* a_enchantment);
 
 	private:
-		struct Enchantment
-		{
-			RE::EnchantmentItem* enchantment;
-			float chargeTime;
-			uint32_t charges;
-			uint32_t cost;
-
-			Enchantment() = delete;
-			Enchantment(RE::EnchantmentItem* a_template)
-			{
-				this->enchantment = a_template;
-				this->chargeTime = 0.5;
-				this->cost = 0;
-				this->charges = 0;
-			}
-		};
-
 		RE::BSEventNotifyControl ProcessEvent(
 			const RE::TESFurnitureEvent* a_event,
 			RE::BSTEventSource<RE::TESFurnitureEvent>*) override;

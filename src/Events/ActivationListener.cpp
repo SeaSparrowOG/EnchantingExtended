@@ -46,6 +46,15 @@ namespace ActivationListener
 		return isInValidAmmoWorkbench;
 	}
 
+	Enchantment EnchantingTable::GetEnchantmentInfo(RE::EnchantmentItem* a_enchantment)
+	{
+		for (auto& pair : spellEnchantments) {
+			if (pair.second.enchantment == a_enchantment) {
+				return pair.second;
+			}
+		}
+	}
+
 	RE::BSEventNotifyControl EnchantingTable::ProcessEvent(
 		const RE::TESFurnitureEvent* a_event,
 		RE::BSTEventSource<RE::TESFurnitureEvent>*)
