@@ -232,6 +232,23 @@ namespace Hooks
 					chosenEnchantments.push_back(enchantmentEntry.get()->data);
 				}
 
+				float playerEnchantLevel = RE::PlayerCharacter::GetSingleton()->GetActorValue(
+					RE::ActorValue::kEnchanting);
+				if (playerEnchantLevel < 25.0f) {
+					playerEnchantLevel = 25.0f;
+				}
+				else if (playerEnchantLevel > 100.0f) {
+					playerEnchantLevel = 100.0f;
+				}
+
+				float soulMultiple = a_menu->createEffectFunctor.soulGemRatio;
+				soulMultiple *= playerEnchantLevel / 90.0f;
+
+				float currCharge = a_menu->createEffectFunctor.enchantmentParams->magnitude;
+				float maxCharge = a_menu->createEffectFunctor.enchantmentParams->maxMagnitude;
+				float chargeMultiple = maxCharge > 0.0f &&
+					currCharge > 0.0f ? currCharge / maxCharge : 1.0f;
+
 				ActivationListener::Enchantment
 					chosenTemplate = ActivationListener::EnchantingTable::GetSingleton()
 										 ->GetEnchantmentInfo(chosenEnchantments);
@@ -244,8 +261,8 @@ namespace Hooks
 				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
 				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
 				enchantment->data.chargeTime = chosenTemplate.chargeTime;
-				enchantment->data.chargeOverride = chosenTemplate.charges;
-				enchantment->data.costOverride = chosenTemplate.cost;
+				enchantment->data.chargeOverride = chosenTemplate.charges * chargeMultiple;
+				enchantment->data.costOverride = chosenTemplate.cost * soulMultiple;
 				enchantment->data.flags |= RE::EnchantmentItem::EnchantmentFlag::kCostOverride;
 				return enchantment;
 			}
@@ -369,6 +386,9 @@ namespace Hooks
 
 		if (Data::CreatedObjectManager::GetSingleton()->IsBaseAmmoEnchantment(a_enchantment)) {
 			a_value *= Settings::INISettings::GetSingleton()->fAmmoChargeMult;
+		}
+		else if (a_enchantment->GetSpellType() == RE::MagicSystem::SpellType::kStaffEnchantment) {
+			a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
 		}
 	}
 }
