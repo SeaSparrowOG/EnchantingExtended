@@ -11,7 +11,14 @@ namespace ActivationListener
 		uint32_t charges;
 		uint32_t cost;
 
-		Enchantment() = delete;
+		Enchantment()
+		{
+			this->enchantment = nullptr;
+			this->chargeTime = 0.5;
+			this->cost = 0;
+			this->charges = 0;
+		}
+
 		Enchantment(RE::EnchantmentItem* a_template)
 		{
 			this->enchantment = a_template;
@@ -28,7 +35,7 @@ namespace ActivationListener
 		bool RegisterListener();
 		bool IsInValidStaffWorkbench();
 		bool IsInValidAmmoWorkbench();
-		Enchantment GetEnchantmentInfo(RE::EnchantmentItem* a_enchantment);
+		Enchantment GetEnchantmentInfo(const std::vector<RE::EnchantmentItem*>& a_enchantments);
 
 	private:
 		RE::BSEventNotifyControl ProcessEvent(

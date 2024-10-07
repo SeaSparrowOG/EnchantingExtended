@@ -225,10 +225,16 @@ namespace Hooks
 		case RE::FormType::Weapon:
 			_creatingCount = 1;
 			if (isStaff) {
-				auto* chosenEnchantment = a_menu->selected.effects.begin()->get()->data;
+				std::vector<RE::EnchantmentItem*> chosenEnchantments{};
+				for (auto& enchantmentEntry : a_menu->selected.effects) {
+					if (!enchantmentEntry.get()->data)
+						continue;
+					chosenEnchantments.push_back(enchantmentEntry.get()->data);
+				}
+
 				ActivationListener::Enchantment
 					chosenTemplate = ActivationListener::EnchantingTable::GetSingleton()
-										 ->GetEnchantmentInfo(chosenEnchantment);
+										 ->GetEnchantmentInfo(chosenEnchantments);
 				auto* enchantment = RE::BGSCreatedObjectManager::GetSingleton()
 										->AddWeaponEnchantment(
 											a_menu->createEffectFunctor.createdEffects);
@@ -240,6 +246,7 @@ namespace Hooks
 				enchantment->data.chargeTime = chosenTemplate.chargeTime;
 				enchantment->data.chargeOverride = chosenTemplate.charges;
 				enchantment->data.costOverride = chosenTemplate.cost;
+				enchantment->data.flags |= RE::EnchantmentItem::EnchantmentFlag::kCostOverride;
 				return enchantment;
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(

@@ -46,13 +46,30 @@ namespace ActivationListener
 		return isInValidAmmoWorkbench;
 	}
 
-	Enchantment EnchantingTable::GetEnchantmentInfo(RE::EnchantmentItem* a_enchantment)
+	Enchantment EnchantingTable::GetEnchantmentInfo(
+		const std::vector<RE::EnchantmentItem*>& a_enchantments)
 	{
-		for (auto& pair : spellEnchantments) {
-			if (pair.second.enchantment == a_enchantment) {
-				return pair.second;
+		auto response = Enchantment();
+
+		for (auto* enchantment : a_enchantments) {
+			if (!enchantment) {
+				response.enchantment = enchantment;
+			}
+
+			for (auto& pair : this->spellEnchantments) {
+				if (pair.second.enchantment != enchantment)
+					continue;
+				if (pair.second.chargeTime > response.chargeTime) {
+					response.chargeTime = pair.second.chargeTime;
+				}
+				if (pair.second.charges > response.charges) {
+					response.charges = pair.second.charges;
+				}
+				response.cost += pair.second.cost;
+				break;
 			}
 		}
+		return response;
 	}
 
 	RE::BSEventNotifyControl EnchantingTable::ProcessEvent(
