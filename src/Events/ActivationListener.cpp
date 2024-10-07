@@ -141,6 +141,9 @@ namespace ActivationListener
 		if (configPaths.empty())
 			return true;
 
+		auto isSelfTargettingFixInstalled =
+			std::filesystem::exists(std::filesystem::path("Data\\Meshes\\Actors\\Character\\_1stPerson\\Animations\\DynamicAnimationReplacer\\_CustomConditions\\3700614\\mlh_equip.hkx"));
+
 		for (auto& config : configPaths) {
 			std::ifstream rawJSON(config);
 			Json::Reader JSONReader;
@@ -216,6 +219,30 @@ namespace ActivationListener
 							identifier,
 							!keySpell ? "KEY MISSING" : _debugEDID(keySpell),
 							!valueSpell ? "VALUE MISSING" : _debugEDID(valueSpell));
+						continue;
+					}
+
+					if (keySpell->GetDelivery() == RE::MagicSystem::Delivery::kSelf &&
+						!isSelfTargettingFixInstalled) {
+						_loggerInfo(
+							"Note: {} was discarded, because the Self Targetting fix was not "
+							"detected.", keySpell->GetName());
+						continue;
+					}
+
+					bool isValid = true;
+					for (auto& effect : keySpell->effects) {
+						if (!effect->baseEffect)
+							continue;
+						if (!effect->baseEffect->HasKeywordString("RitualSpellEffect"sv))
+							continue;
+						isValid = false;
+						break;
+					}
+					if (!isValid) {
+						_loggerInfo(
+							"Note: {} was discarded because it is a ritual spell.",
+							keySpell->GetName());
 						continue;
 					}
 
