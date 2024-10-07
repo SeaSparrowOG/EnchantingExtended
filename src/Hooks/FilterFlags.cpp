@@ -110,9 +110,13 @@ namespace Hooks
 
 	void FilterFlags::EnchantmentEntryPatch()
 	{
-
 		auto init_addr = REL::ID(51285).address();
 		auto hook_addr = init_addr + 0x1D5;
+		static const auto hook = REL::Relocation<std::uintptr_t>(REL::ID(51285), 0x1D5);
+		if (!REL::make_pattern<"48 8B 03">().match(hook.address())) {
+			util::report_and_fail("FilterFlags::EnchantmentEntryPatch failed to install"sv);
+		}
+
 		auto return_addr = init_addr + 0x1F5;
 		struct Patch : Xbyak::CodeGenerator
 		{
