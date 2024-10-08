@@ -605,13 +605,16 @@ namespace Hooks
 				}
 				return FilterFlag::None;
 			}
-			else if (const auto soulGem = object->As<RE::TESSoulGem>()) {
-				if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
-					return FilterFlag::None;
-				}
-				else {
+			else if (const auto entryObj = a_entry->GetObject()) {
+				if (entryObj->HasKeywordByEditorID("STEN_StaffFuel")) {
+					if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
+						auto* newList = new RE::ExtraDataList();
+						newList->Add(new RE::ExtraSoul(RE::SOUL_LEVEL::kGrand));
+						a_entry->AddExtraList(newList);
+					}
 					return FilterFlag::SoulGem;
 				}
+				return FilterFlag::None;
 			}
 			else {
 				return FilterFlag::None;
@@ -646,7 +649,7 @@ namespace Hooks
 			else {
 				return FilterFlag::DisenchantWeapon;
 			}
-		}
+		} 
 		else if (const auto ammo = object->As<RE::TESAmmo>()) {
 			const auto globalSettings = Settings::GlobalSettings::GetSingleton();
 			if (!globalSettings->AmmoEnchantingEnabled() ||

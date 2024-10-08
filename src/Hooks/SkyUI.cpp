@@ -208,6 +208,11 @@ namespace Hooks
 				a_dataContainer->SetMember("magicType", baseEffect->data.resistVariable);
 			}
 		} break;
+
+		case FilterFlag::SoulGem:
+		{
+
+		} break;
 		}
 	}
 }

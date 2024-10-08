@@ -122,7 +122,6 @@ namespace ActivationListener
 			enchant->formFlags |= RE::TESForm::RecordFlags::kKnown;
 			enchant->AddChange(RE::TESForm::ChangeFlags::kFlags);
 		}
-		_loggerInfo("Player is in staff enchanter");
 		continueEvent;
 	}
 
