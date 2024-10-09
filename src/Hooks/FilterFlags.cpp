@@ -21,6 +21,7 @@ namespace Hooks
 		ItemEntryPatch();
 		EffectEntryPatch();
 		EnchantmentEntryPatch();
+		ItemCardPatch();
 
 		DisenchantSelectPatch();
 		DisenchantEnablePatch();
@@ -112,11 +113,6 @@ namespace Hooks
 	{
 		auto init_addr = REL::ID(51285).address();
 		auto hook_addr = init_addr + 0x1D5;
-		static const auto hook = REL::Relocation<std::uintptr_t>(REL::ID(51285), 0x1D5);
-		if (!REL::make_pattern<"48 8B 03">().match(hook.address())) {
-			util::report_and_fail("FilterFlags::EnchantmentEntryPatch failed to install"sv);
-		}
-
 		auto return_addr = init_addr + 0x1F5;
 		struct Patch : Xbyak::CodeGenerator
 		{
@@ -134,6 +130,12 @@ namespace Hooks
 		auto& trampoline = SKSE::GetTrampoline();
 
 		trampoline.write_branch<5>(hook_addr, patch.getCode());
+	}
+
+	void FilterFlags::ItemCardPatch()
+	{
+		REL::Relocation<std::uintptr_t> vtbl{ RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry::VTABLE[0] };
+		_SetItemCardInfo = vtbl.write_vfunc(0x1, FilterFlags::SetItemCardInfo);
 	}
 
 	void FilterFlags::EffectEntryPatch()
@@ -607,7 +609,21 @@ namespace Hooks
 			}
 			else if (const auto entryObj = a_entry->GetObject()) {
 				if (entryObj->HasKeywordByEditorID("STEN_StaffFuel")) {
-					if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
+					//This is a weird control flow. If we have a soul gem, it may
+					//have a soul - only return the soul gem filter in that case.
+					//If we DON'T have a soul gem, append a soul value to it and then
+					//always return the filter flag.
+					//
+					//Possible weirdness with other mods that might add souls to
+					//different form types.
+					auto* soulGem = entryObj->As<RE::TESSoulGem>();
+					if (soulGem && a_entry->GetSoulLevel() != RE::SOUL_LEVEL::kNone) {
+						return FilterFlag::SoulGem;
+					}
+					else if (soulGem && a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
+						return FilterFlag::None;
+					}
+					else if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
 						auto* newList = new RE::ExtraDataList();
 						newList->Add(new RE::ExtraSoul(RE::SOUL_LEVEL::kGrand));
 						a_entry->AddExtraList(newList);
@@ -751,6 +767,99 @@ namespace Hooks
 			return RE::FormType::Ammo;
 		default:
 			return RE::FormType::Armor;
+		}
+	}
+
+	void FilterFlags::SetItemCardInfo(
+		RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry* a_categories,
+		RE::CraftingSubMenus::EnchantConstructMenu* a_menu)
+	{
+		_SetItemCardInfo(a_categories, a_menu);
+		if (a_categories->data && !a_categories->data->GetObject()->As<RE::TESSoulGem>()) {
+			RE::GFxValue val;
+			if (!a_menu->itemInfo.GetMember("LastUpdateObj", &val)) {
+				_loggerInfo("Failed to read itemCard obj");
+				return;
+			}
+
+			if (val.IsUndefined() || val.IsNull()) {
+				_loggerInfo("Couldn't find last update obj");
+				return;
+			}
+
+			//Object value type (must be 12)
+			RE::GFxValue valueType;
+			if (!val.GetMember("type", &valueType)) {
+				_loggerInfo("Failed");
+				return;
+			}
+
+			if (valueType.IsUndefined() || valueType.IsNull()) {
+				_loggerInfo("Val is undefined {}", valueType.IsUndefined());
+				return;
+			}
+
+			val.SetMember("type", 12);
+			a_menu->itemInfo.SetMember("LastUpdateObj", val);
+			a_menu->itemInfo.GotoAndStop("SoulGem");
+
+			//Flavor text
+			RE::GFxValue valueSoul;
+			if (!a_menu->itemInfo.GetMember("SoulLevel", &valueSoul)) {
+				_loggerInfo("Failed to resolve SoulLevel");
+				return;
+			}
+
+			if (valueSoul.IsUndefined() || valueSoul.IsNull()) {
+				_loggerInfo("valueSoul is undefined {}", valueSoul.IsUndefined());
+				return;
+			}
+
+			RE::GFxValue valueText;
+			if (!valueSoul.GetMember("text", &valueText)) {
+				_loggerInfo("Failed to resolve valueText");
+				return;
+			}
+
+			if (valueText.IsUndefined() || valueText.IsNull()) {
+				_loggerInfo("valueText is undefined {}", valueText.IsUndefined());
+				return;
+			}
+
+			valueSoul.SetMember("text",
+				"A strange stone, pulsing with the warmth of a beating heart.");
+			a_menu->itemInfo.SetMember("SoulLevel", valueSoul);
+
+			//Weight
+			RE::GFxValue valueWeight;
+			if (!a_menu->itemInfo.GetMember("ItemWeightText", &valueWeight)) {
+				_loggerInfo("Failed to resolve valueWeight");
+				return;
+			}
+
+			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
+				_loggerInfo("valueWeight is undefined {}", valueWeight.IsUndefined());
+				return;
+			}
+
+			valueWeight.SetText("1");
+			a_menu->itemInfo.SetMember("ItemWeightText", valueWeight);
+
+			//Value
+			RE::GFxValue moneyValue;
+			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
+				_loggerInfo("Failed to resolve moneyValue");
+				return;
+			}
+
+			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
+				_loggerInfo("moneyValue is undefined {}", moneyValue.IsUndefined());
+				return;
+			}
+
+			moneyValue.SetText("100");
+			a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
+			_loggerInfo("Success");
 		}
 	}
 }

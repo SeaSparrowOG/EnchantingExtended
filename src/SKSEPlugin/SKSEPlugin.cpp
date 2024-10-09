@@ -54,6 +54,22 @@ namespace
 			}
 		}
 	}
+
+	void HandleSoulGemFuel()
+	{
+		auto* fuelKeyword = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("STEN_StaffFuel"sv);
+		if (!fuelKeyword) {
+			_loggerError(
+				"Warning: Failed to find STEN_StaffFuel. Ensure that the plugin is loaded.");
+			return;
+		}
+
+		auto* dataHandler = RE::TESDataHandler::GetSingleton();
+		auto& soulGemArray = dataHandler->GetFormArray<RE::TESSoulGem>();
+		for (auto* soulGem : soulGemArray) {
+			soulGem->AddKeyword(fuelKeyword);
+		}
+	}
 }
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_message)
@@ -62,6 +78,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	case SKSE::MessagingInterface::kDataLoaded:
 		if (Settings::INISettings::GetSingleton()->bAdjustStaffEnchanters) {
 			HandleEnchantingTables();
+		}
+		if (Settings::INISettings::GetSingleton()->bUseSoulGemsForStaves) {
+			HandleSoulGemFuel();
 		}
 		ActivationListener::EnchantingTable::GetSingleton()->RegisterListener();
 		break;
@@ -89,7 +108,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	_loggerInfo("Plugin Version: {}.", Version::VERSION);
 	_loggerInfo("-------------------------------------------------------------------------------------");
 	SKSE::Init(a_skse);
-	SKSE::AllocTrampoline(287);
+	SKSE::AllocTrampoline(301);
 
 	_loggerInfo("Reading settings...");
 	Settings::INISettings::GetSingleton()->LoadSettings();
