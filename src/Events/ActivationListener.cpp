@@ -24,9 +24,9 @@ namespace
 	}
 }
 
-namespace ActivationListener
+namespace Staves
 {
-	bool EnchantingTable::RegisterListener()
+	bool StaffEnchantManager::RegisterListener()
 	{
 		auto* eventHolder = RE::ScriptEventSourceHolder::GetSingleton();
 		if (!eventHolder)
@@ -36,17 +36,12 @@ namespace ActivationListener
 		return ReadSettings();
 	}
 
-	bool EnchantingTable::IsInValidStaffWorkbench()
+	bool StaffEnchantManager::IsInValidStaffWorkbench()
 	{
 		return isInValidStaffWorkbench;
 	}
 
-	bool EnchantingTable::IsInValidAmmoWorkbench()
-	{
-		return isInValidAmmoWorkbench;
-	}
-
-	Enchantment EnchantingTable::GetEnchantmentInfo(
+	Enchantment StaffEnchantManager::GetEnchantmentInfo(
 		const std::vector<RE::EnchantmentItem*>& a_enchantments)
 	{
 		auto response = Enchantment();
@@ -72,7 +67,7 @@ namespace ActivationListener
 		return response;
 	}
 
-	RE::BSEventNotifyControl EnchantingTable::ProcessEvent(
+	RE::BSEventNotifyControl StaffEnchantManager::ProcessEvent(
 		const RE::TESFurnitureEvent* a_event,
 		RE::BSTEventSource<RE::TESFurnitureEvent>*)
 	{
@@ -125,7 +120,7 @@ namespace ActivationListener
 		continueEvent;
 	}
 
-	bool EnchantingTable::ReadSettings()
+	bool StaffEnchantManager::ReadSettings()
 	{
 		std::vector<std::string> configPaths = std::vector<std::string>();
 		try {

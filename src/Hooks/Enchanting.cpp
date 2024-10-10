@@ -21,6 +21,8 @@ namespace Hooks
 		AmmoQuantityPatch();
 		InventoryNotificationPatch();
 		EnchantmentChargePatch();
+
+		ItemCardPatch();
 	}
 
 	void Enchanting::ItemPreviewPatch()
@@ -200,6 +202,14 @@ namespace Hooks
 			&Enchanting::ApplyPerkEntries);
 	}
 
+	void Enchanting::ItemCardPatch()
+	{
+		REL::Relocation<std::uintptr_t> vtbl{
+			RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry::VTABLE[0]
+		};
+		_SetItemCardInfo = vtbl.write_vfunc(0x1, Enchanting::SetItemCardInfo);
+	}
+
 	RE::EnchantmentItem* Enchanting::CreateEnchantment(
 		RE::FormType a_formType,
 		RE::CraftingSubMenus::EnchantConstructMenu* a_menu)
@@ -249,8 +259,8 @@ namespace Hooks
 				float chargeMultiple = maxCharge > 0.0f &&
 					currCharge > 0.0f ? currCharge / maxCharge : 1.0f;
 
-				ActivationListener::Enchantment
-					chosenTemplate = ActivationListener::EnchantingTable::GetSingleton()
+				Staves::Enchantment
+					chosenTemplate = Staves::StaffEnchantManager::GetSingleton()
 										 ->GetEnchantmentInfo(chosenEnchantments);
 				auto* enchantment = RE::BGSCreatedObjectManager::GetSingleton()
 										->AddWeaponEnchantment(
@@ -389,6 +399,84 @@ namespace Hooks
 		}
 		else if (a_enchantment->GetSpellType() == RE::MagicSystem::SpellType::kStaffEnchantment) {
 			a_value *= Settings::INISettings::GetSingleton()->fStaffChargeMult;
+		}
+	}
+
+	void Enchanting::SetItemCardInfo(
+		RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry* a_categories,
+		RE::CraftingSubMenus::EnchantConstructMenu* a_menu)
+	{
+#undef GetObject
+		_SetItemCardInfo(a_categories, a_menu);
+		if (a_categories->data && !a_categories->data->GetObject()->As<RE::TESSoulGem>()) {
+			RE::GFxValue val;
+			if (!a_menu->itemInfo.GetMember("LastUpdateObj", &val)) {
+				return;
+			}
+			if (val.IsUndefined() || val.IsNull()) {
+				_loggerInfo("Couldn't find last update obj");
+				return;
+			}
+
+			// Object value type (must be 12)
+			RE::GFxValue valueType;
+			if (!val.GetMember("type", &valueType)) {
+				return;
+			}
+			if (valueType.IsUndefined() || valueType.IsNull()) {
+				return;
+			}
+
+			val.SetMember("type", 12);
+			a_menu->itemInfo.SetMember("LastUpdateObj", val);
+			a_menu->itemInfo.GotoAndStop("SoulGem");
+
+			// Flavor text
+			RE::GFxValue valueSoul;
+			if (!a_menu->itemInfo.GetMember("SoulLevel", &valueSoul)) {
+				return;
+			}
+			if (valueSoul.IsUndefined() || valueSoul.IsNull()) {
+				_loggerInfo("valueSoul is undefined {}", valueSoul.IsUndefined());
+				return;
+			}
+
+			RE::GFxValue valueText;
+			if (!valueSoul.GetMember("text", &valueText)) {
+				return;
+			}
+			if (valueText.IsUndefined() || valueText.IsNull()) {
+				_loggerInfo("valueText is undefined {}", valueText.IsUndefined());
+				return;
+			}
+
+			valueSoul.SetMember(
+				"text",
+				"A strange stone, pulsing with the warmth of a beating heart.");
+			a_menu->itemInfo.SetMember("SoulLevel", valueSoul);
+
+			// Weight
+			RE::GFxValue valueWeight;
+			if (!a_menu->itemInfo.GetMember("ItemWeightText", &valueWeight)) {
+				return;
+			}
+			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
+				return;
+			}
+			valueWeight.SetText("1");
+			a_menu->itemInfo.SetMember("ItemWeightText", valueWeight);
+
+			// Value
+			RE::GFxValue moneyValue;
+			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
+				return;
+			}
+			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
+				return;
+			}
+
+			moneyValue.SetText("100");
+			a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
 		}
 	}
 }

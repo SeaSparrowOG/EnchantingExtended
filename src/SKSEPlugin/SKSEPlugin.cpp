@@ -82,7 +82,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 		if (Settings::INISettings::GetSingleton()->bUseSoulGemsForStaves) {
 			HandleSoulGemFuel();
 		}
-		ActivationListener::EnchantingTable::GetSingleton()->RegisterListener();
+		Staves::StaffEnchantManager::GetSingleton()->RegisterListener();
 		break;
 	default:
 		break;
