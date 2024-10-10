@@ -20,7 +20,7 @@ namespace Ext
 		auto& entry = a_menu->listEntries[a_index];
 		auto filterFlag = entry->filterFlag.underlying();
 
-		bool isInStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()
+		bool isInStaffEnchanter = Staves::StaffEnchantManager::GetSingleton()
 									  ->IsInValidStaffWorkbench();
 		if (isInStaffEnchanter) {
 			if (filterFlag == FilterFlag::SoulGem || filterFlag == FilterFlag::EnchantSpecial) {

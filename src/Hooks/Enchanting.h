@@ -27,6 +27,9 @@ namespace Hooks
 		// Modify enchantment charges
 		static void EnchantmentChargePatch();
 
+		// Allows for there to be an item card when using alternate staff fuel.
+		static void ItemCardPatch();
+
 		static RE::EnchantmentItem* CreateEnchantment(
 			RE::FormType a_formType,
 			RE::CraftingSubMenus::EnchantConstructMenu* a_menu);
@@ -63,6 +66,10 @@ namespace Hooks
 			RE::TESForm* a_item,
 			float& a_value);
 
+		static void SetItemCardInfo(
+			RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry* a_categories,
+			RE::CraftingSubMenus::EnchantConstructMenu* a_menu);
+
 		inline static const char* _customName = nullptr;
 		inline static std::uint16_t _availableCount = 0;
 		inline static std::uint16_t _creatingCount = 1;
@@ -74,5 +81,6 @@ namespace Hooks
 		inline static REL::Relocation<decltype(&SetExtraData)> _SetEnchantment;
 		inline static REL::Relocation<decltype(&InventoryNotification)> _InventoryNotification;
 		inline static REL::Relocation<decltype(&ApplyPerkEntries)> _ApplyPerkEntries;
+		inline static REL::Relocation<decltype(&SetItemCardInfo)> _SetItemCardInfo;
 	};
 }

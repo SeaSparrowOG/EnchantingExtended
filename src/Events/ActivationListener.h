@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ActivationListener
+namespace Staves
 {
 #define continueEvent return RE::BSEventNotifyControl::kContinue
 
@@ -28,13 +28,12 @@ namespace ActivationListener
 		}
 	};
 
-	class EnchantingTable : public ISingleton<EnchantingTable>,
+	class StaffEnchantManager : public ISingleton<StaffEnchantManager>,
 		public RE::BSTEventSink<RE::TESFurnitureEvent>
 	{
 	public:
 		bool RegisterListener();
 		bool IsInValidStaffWorkbench();
-		bool IsInValidAmmoWorkbench();
 		Enchantment GetEnchantmentInfo(const std::vector<RE::EnchantmentItem*>& a_enchantments);
 
 	private:
@@ -44,7 +43,6 @@ namespace ActivationListener
 		bool ReadSettings();
 
 		bool isInValidStaffWorkbench{ false };
-		bool isInValidAmmoWorkbench{ true };
 
 		std::unordered_map<RE::SpellItem*, Enchantment> spellEnchantments;
 	};

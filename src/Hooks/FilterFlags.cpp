@@ -21,7 +21,6 @@ namespace Hooks
 		ItemEntryPatch();
 		EffectEntryPatch();
 		EnchantmentEntryPatch();
-		ItemCardPatch();
 
 		DisenchantSelectPatch();
 		DisenchantEnablePatch();
@@ -130,12 +129,6 @@ namespace Hooks
 		auto& trampoline = SKSE::GetTrampoline();
 
 		trampoline.write_branch<5>(hook_addr, patch.getCode());
-	}
-
-	void FilterFlags::ItemCardPatch()
-	{
-		REL::Relocation<std::uintptr_t> vtbl{ RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry::VTABLE[0] };
-		_SetItemCardInfo = vtbl.write_vfunc(0x1, FilterFlags::SetItemCardInfo);
 	}
 
 	void FilterFlags::EffectEntryPatch()
@@ -483,7 +476,7 @@ namespace Hooks
 			auto* enchantment = a_entry->data;
 			bool isStaffEnchantment = enchantment ? enchantment->GetSpellType() == RE::MagicSystem::SpellType::kStaffEnchantment : false;
 
-			if (isStaffEnchantment && ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench()) {
+			if (isStaffEnchantment && Staves::StaffEnchantManager::GetSingleton()->IsInValidStaffWorkbench()) {
 				auto* costliest = enchantment->GetCostliestEffectItem();
 				auto* baseEffect = costliest ? costliest->baseEffect : nullptr;
 				if (!baseEffect)
@@ -528,8 +521,7 @@ namespace Hooks
 					}
 				}
 			}
-			else if (manager->IsBaseAmmoEnchantment(a_entry->data)
-				&& ActivationListener::EnchantingTable::GetSingleton()->IsInValidAmmoWorkbench())
+			else if (manager->IsBaseAmmoEnchantment(a_entry->data))
 				{
 				const auto globalSettings = Settings::GlobalSettings::GetSingleton();
 				if (!globalSettings->AmmoEnchantingEnabled()) {
@@ -546,7 +538,7 @@ namespace Hooks
 
 	bool FilterFlags::EvaluateEnchantment(RE::EnchantmentItem* a_item)
 	{
-		if (!ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench()) {
+		if (!Staves::StaffEnchantManager::GetSingleton()->IsInValidStaffWorkbench()) {
 			return (
 				(a_item->GetDelivery() == RE::MagicSystem::Delivery::kSelf &&
 				 a_item->GetCastingType() == RE::MagicSystem::CastingType::kConstantEffect)
@@ -595,7 +587,7 @@ namespace Hooks
 
 		const auto staff = object->As<RE::TESObjectWEAP>();
 		bool isStaffSelected = staff ? staff->IsStaff() : false;
-		bool inStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()->IsInValidStaffWorkbench();
+		bool inStaffEnchanter = Staves::StaffEnchantManager::GetSingleton()->IsInValidStaffWorkbench();
 
 		if (inStaffEnchanter) {
 			if (isStaffSelected) {
@@ -701,7 +693,7 @@ namespace Hooks
 	std::uint32_t FilterFlags::GetEnabledFilters(Menu::Selections* a_selected)
 	{
 		std::uint32_t filters = FilterFlag::SoulGem;
-		bool isInStaffEnchanter = ActivationListener::EnchantingTable::GetSingleton()
+		bool isInStaffEnchanter = Staves::StaffEnchantManager::GetSingleton()
 									  ->IsInValidStaffWorkbench();
 		if (isInStaffEnchanter) {
 			if (!a_selected->effects.empty()) {
@@ -767,99 +759,6 @@ namespace Hooks
 			return RE::FormType::Ammo;
 		default:
 			return RE::FormType::Armor;
-		}
-	}
-
-	void FilterFlags::SetItemCardInfo(
-		RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry* a_categories,
-		RE::CraftingSubMenus::EnchantConstructMenu* a_menu)
-	{
-		_SetItemCardInfo(a_categories, a_menu);
-		if (a_categories->data && !a_categories->data->GetObject()->As<RE::TESSoulGem>()) {
-			RE::GFxValue val;
-			if (!a_menu->itemInfo.GetMember("LastUpdateObj", &val)) {
-				_loggerInfo("Failed to read itemCard obj");
-				return;
-			}
-
-			if (val.IsUndefined() || val.IsNull()) {
-				_loggerInfo("Couldn't find last update obj");
-				return;
-			}
-
-			//Object value type (must be 12)
-			RE::GFxValue valueType;
-			if (!val.GetMember("type", &valueType)) {
-				_loggerInfo("Failed");
-				return;
-			}
-
-			if (valueType.IsUndefined() || valueType.IsNull()) {
-				_loggerInfo("Val is undefined {}", valueType.IsUndefined());
-				return;
-			}
-
-			val.SetMember("type", 12);
-			a_menu->itemInfo.SetMember("LastUpdateObj", val);
-			a_menu->itemInfo.GotoAndStop("SoulGem");
-
-			//Flavor text
-			RE::GFxValue valueSoul;
-			if (!a_menu->itemInfo.GetMember("SoulLevel", &valueSoul)) {
-				_loggerInfo("Failed to resolve SoulLevel");
-				return;
-			}
-
-			if (valueSoul.IsUndefined() || valueSoul.IsNull()) {
-				_loggerInfo("valueSoul is undefined {}", valueSoul.IsUndefined());
-				return;
-			}
-
-			RE::GFxValue valueText;
-			if (!valueSoul.GetMember("text", &valueText)) {
-				_loggerInfo("Failed to resolve valueText");
-				return;
-			}
-
-			if (valueText.IsUndefined() || valueText.IsNull()) {
-				_loggerInfo("valueText is undefined {}", valueText.IsUndefined());
-				return;
-			}
-
-			valueSoul.SetMember("text",
-				"A strange stone, pulsing with the warmth of a beating heart.");
-			a_menu->itemInfo.SetMember("SoulLevel", valueSoul);
-
-			//Weight
-			RE::GFxValue valueWeight;
-			if (!a_menu->itemInfo.GetMember("ItemWeightText", &valueWeight)) {
-				_loggerInfo("Failed to resolve valueWeight");
-				return;
-			}
-
-			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
-				_loggerInfo("valueWeight is undefined {}", valueWeight.IsUndefined());
-				return;
-			}
-
-			valueWeight.SetText("1");
-			a_menu->itemInfo.SetMember("ItemWeightText", valueWeight);
-
-			//Value
-			RE::GFxValue moneyValue;
-			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
-				_loggerInfo("Failed to resolve moneyValue");
-				return;
-			}
-
-			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
-				_loggerInfo("moneyValue is undefined {}", moneyValue.IsUndefined());
-				return;
-			}
-
-			moneyValue.SetText("100");
-			a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
-			_loggerInfo("Success");
 		}
 	}
 }

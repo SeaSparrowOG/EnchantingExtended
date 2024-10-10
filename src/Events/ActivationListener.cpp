@@ -24,9 +24,9 @@ namespace
 	}
 }
 
-namespace ActivationListener
+namespace Staves
 {
-	bool EnchantingTable::RegisterListener()
+	bool StaffEnchantManager::RegisterListener()
 	{
 		auto* eventHolder = RE::ScriptEventSourceHolder::GetSingleton();
 		if (!eventHolder)
@@ -36,17 +36,12 @@ namespace ActivationListener
 		return ReadSettings();
 	}
 
-	bool EnchantingTable::IsInValidStaffWorkbench()
+	bool StaffEnchantManager::IsInValidStaffWorkbench()
 	{
 		return isInValidStaffWorkbench;
 	}
 
-	bool EnchantingTable::IsInValidAmmoWorkbench()
-	{
-		return isInValidAmmoWorkbench;
-	}
-
-	Enchantment EnchantingTable::GetEnchantmentInfo(
+	Enchantment StaffEnchantManager::GetEnchantmentInfo(
 		const std::vector<RE::EnchantmentItem*>& a_enchantments)
 	{
 		auto response = Enchantment();
@@ -72,7 +67,7 @@ namespace ActivationListener
 		return response;
 	}
 
-	RE::BSEventNotifyControl EnchantingTable::ProcessEvent(
+	RE::BSEventNotifyControl StaffEnchantManager::ProcessEvent(
 		const RE::TESFurnitureEvent* a_event,
 		RE::BSTEventSource<RE::TESFurnitureEvent>*)
 	{
@@ -125,7 +120,7 @@ namespace ActivationListener
 		continueEvent;
 	}
 
-	bool EnchantingTable::ReadSettings()
+	bool StaffEnchantManager::ReadSettings()
 	{
 		std::vector<std::string> configPaths = std::vector<std::string>();
 		try {
@@ -256,8 +251,31 @@ namespace ActivationListener
 		}
 
 		_loggerInfo("Supported spells:");
+		std::vector<std::string> sortedNames{};
 		for (auto& pair : this->spellEnchantments) {
-			_loggerInfo("     >{}", pair.first->GetName());
+			sortedNames.push_back(pair.first->GetName());
+		}
+		std::sort(sortedNames.begin(), sortedNames.end());
+
+		for (auto it = sortedNames.begin(); it != sortedNames.end(); ++it) {
+			std::string name1 = "";
+			std::string name2 = "";
+			std::string name3 = "";
+
+			name1 = *it;
+			it++;
+			if (it != sortedNames.end()) {
+				name2 = *it;
+				it++;
+				if (it != sortedNames.end()) {
+					name3 = *it;
+				}
+			}
+
+			_loggerInfo("{} - {} - {}", name1, name2, name3);
+			if (it == sortedNames.end()) {
+				break;
+			}
 		}
 		return true;
 	}
