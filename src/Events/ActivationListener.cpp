@@ -251,9 +251,14 @@ namespace Staves
 		}
 
 		_loggerInfo("Supported spells:");
+		size_t maxSize = 0;
 		std::vector<std::string> sortedNames{};
 		for (auto& pair : this->spellEnchantments) {
-			sortedNames.push_back(pair.first->GetName());
+			std::string tempName = pair.first->GetName();
+			if (tempName.size() > maxSize) {
+				maxSize = tempName.size();
+			}
+			sortedNames.push_back(tempName);
 		}
 		std::sort(sortedNames.begin(), sortedNames.end());
 
@@ -263,16 +268,25 @@ namespace Staves
 			std::string name3 = "";
 
 			name1 = *it;
+			while (name1.size() < maxSize) {
+				name1 += " ";
+			}
 			it++;
 			if (it != sortedNames.end()) {
 				name2 = *it;
+				while (name2.size() < maxSize) {
+					name2 += " ";
+				}
 				it++;
 				if (it != sortedNames.end()) {
 					name3 = *it;
+					while (name3.size() < maxSize) {
+						name3 += " ";
+					}
 				}
 			}
 
-			_loggerInfo("{} - {} - {}", name1, name2, name3);
+			_loggerInfo("{}  {}  {}", name1, name2, name3);
 			if (it == sortedNames.end()) {
 				break;
 			}
