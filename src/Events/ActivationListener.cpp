@@ -251,8 +251,31 @@ namespace Staves
 		}
 
 		_loggerInfo("Supported spells:");
+		std::vector<std::string> sortedNames{};
 		for (auto& pair : this->spellEnchantments) {
-			_loggerInfo("     >{}", pair.first->GetName());
+			sortedNames.push_back(pair.first->GetName());
+		}
+		std::sort(sortedNames.begin(), sortedNames.end());
+
+		for (auto it = sortedNames.begin(); it != sortedNames.end(); ++it) {
+			std::string name1 = "";
+			std::string name2 = "";
+			std::string name3 = "";
+
+			name1 = *it;
+			it++;
+			if (it != sortedNames.end()) {
+				name2 = *it;
+				it++;
+				if (it != sortedNames.end()) {
+					name3 = *it;
+				}
+			}
+
+			_loggerInfo("{} - {} - {}", name1, name2, name3);
+			if (it == sortedNames.end()) {
+				break;
+			}
 		}
 		return true;
 	}
