@@ -463,19 +463,30 @@ namespace Hooks
 			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
 				return;
 			}
-			valueWeight.SetText("1");
+
+			auto itemValue = a_categories->data->GetObject()->GetWeight();
+			std::ostringstream out;
+			out << std::fixed << std::setprecision(2) << itemValue;
+			std::string itemValueString = out.str();
+
+			valueWeight.SetText(itemValueString.c_str());
 			a_menu->itemInfo.SetMember("ItemWeightText", valueWeight);
 
 			// Value
 			RE::GFxValue moneyValue;
 			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
-				return;
-			}
-			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
+				_loggerInfo("Failed to resolve moneyValue");
 				return;
 			}
 
-			moneyValue.SetText("100");
+			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
+				_loggerInfo("moneyValue is undefined {}", moneyValue.IsUndefined());
+				return;
+			}
+
+			auto goldValueString = std::to_string(a_categories->data->GetObject()->GetGoldValue());
+
+			moneyValue.SetText(goldValueString.c_str());
 			a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
 		}
 	}
