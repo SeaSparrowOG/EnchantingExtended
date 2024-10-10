@@ -40,8 +40,10 @@ namespace Hooks
 		// When selecting an enchantment without an item, identify Ammo form type
 		static void ItemPreviewPatch();
 
-		//Allows for staff enchantments to show in the menu. The menu filters out non-self const // touch ff enchantments by default.
+		// Allows for staff enchantments to show in the menu. The menu filters out non-self const // touch ff enchantments by default.
 		static void EnchantmentEntryPatch();
+		// Allows for there to be an item card when using alternate staff fuel.
+		static void ItemCardPatch();
 
 		static void PushBack(void* a_arg1, Menu::EnchantmentEntry* a_entry);
 
@@ -53,6 +55,11 @@ namespace Hooks
 
 		static RE::FormType GetFormTypeFromEffectFlag(std::uint32_t a_flag);
 
+		static void SetItemCardInfo(
+			RE::CraftingSubMenus::EnchantConstructMenu::ItemChangeEntry* a_categories,
+			RE::CraftingSubMenus::EnchantConstructMenu* a_menu);
+
 		inline static REL::Relocation<decltype(&PushBack)> _PushBack;
+		inline static REL::Relocation<decltype(&SetItemCardInfo)> _SetItemCardInfo;
 	};
 }

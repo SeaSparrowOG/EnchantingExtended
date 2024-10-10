@@ -17,6 +17,7 @@ set(sources ${sources}
 	src/Hooks/VFX.cpp
 	src/Papyrus/AmmoEnchanting.cpp
 	src/RE/BSResource.cpp
+	src/RE/BaseExtraList.cpp
 	src/SKSEPlugin/SKSEPlugin.cpp
 	src/Serialization/Serialization.cpp
 	src/Settings/GlobalSettings.cpp
