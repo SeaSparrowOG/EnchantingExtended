@@ -15,14 +15,12 @@ endmacro()
 
 macro(find_commonlib_path)
 	if (CommonLibName AND NOT ${CommonLibName} STREQUAL "")
-		# Check path
-		set_from_environment(${CommonLibName}Path)
-		set(CommonLibPath ${${CommonLibName}Path})
+		find_path(CommonLibPath
+		include/REL/Relocation.h
+		PATHS extern/${CommonLibName})
 		if (${CommonLibPath} STREQUAL "CommonLibPath-NOTFOUND")
-			#Check extern
-			find_path(CommonLibPath
-			include/REL/Relocation.h
-			PATHS extern/${CommonLibName})
+			set_from_environment(${CommonLibName}Path)
+			set(CommonLibPath ${${CommonLibName}Path})
 		endif()
 	endif()
 endmacro()
@@ -188,10 +186,10 @@ endif ()
 
 # ---- Post build ----
 if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
-	if(BUILD_SKYRIMAE)
-		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME}")
-	else() 
+	if(BUILD_TEST)
 		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} - Test")
+	else() 
+		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME}")
 	endif()
 endif()
 
