@@ -414,7 +414,6 @@ namespace Hooks
 				return;
 			}
 			if (val.IsUndefined() || val.IsNull()) {
-				_loggerInfo("Couldn't find last update obj");
 				return;
 			}
 
@@ -437,7 +436,6 @@ namespace Hooks
 				return;
 			}
 			if (valueSoul.IsUndefined() || valueSoul.IsNull()) {
-				_loggerInfo("valueSoul is undefined {}", valueSoul.IsUndefined());
 				return;
 			}
 
@@ -446,7 +444,6 @@ namespace Hooks
 				return;
 			}
 			if (valueText.IsUndefined() || valueText.IsNull()) {
-				_loggerInfo("valueText is undefined {}", valueText.IsUndefined());
 				return;
 			}
 
@@ -475,12 +472,10 @@ namespace Hooks
 			// Value
 			RE::GFxValue moneyValue;
 			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
-				_loggerInfo("Failed to resolve moneyValue");
 				return;
 			}
 
 			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
-				_loggerInfo("moneyValue is undefined {}", moneyValue.IsUndefined());
 				return;
 			}
 

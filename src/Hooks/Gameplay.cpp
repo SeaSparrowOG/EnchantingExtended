@@ -223,9 +223,8 @@ namespace Hooks
 			return _AddMessage(a_queue, a_menuName, a_type, a_data);
 		}
 
-		std::int32_t delta = a_data->discovery - bothHands->countDelta;
-		a_data->discovery = static_cast<uint32_t>(extraList->GetCount() + delta);
-
+		std::int32_t delta = a_data->discovery.underlying() - bothHands->countDelta;
+		a_data->discovery = static_cast<RE::HUDData::Discovery>(extraList->GetCount() + delta);
 		return _AddMessage(a_queue, a_menuName, a_type, a_data);
 	}
 

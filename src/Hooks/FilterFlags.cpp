@@ -600,27 +600,21 @@ namespace Hooks
 				return FilterFlag::None;
 			}
 			else if (const auto entryObj = a_entry->GetObject()) {
-				if (entryObj->HasKeywordByEditorID("STEN_StaffFuel")) {
-					//This is a weird control flow. If we have a soul gem, it may
-					//have a soul - only return the soul gem filter in that case.
-					//If we DON'T have a soul gem, append a soul value to it and then
-					//always return the filter flag.
-					//
-					//Possible weirdness with other mods that might add souls to
-					//different form types.
-					auto* soulGem = entryObj->As<RE::TESSoulGem>();
-					if (soulGem && a_entry->GetSoulLevel() != RE::SOUL_LEVEL::kNone) {
-						return FilterFlag::SoulGem;
-					}
-					else if (soulGem && a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
-						return FilterFlag::None;
-					}
-					else if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
+				if (Staves::StaffEnchantManager::GetSingleton()->IsInAdvancedStaffEnchanter() &&
+					entryObj->HasKeywordByEditorID("STEN_StaffFuel")) {
+					if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
 						auto* newList = new RE::ExtraDataList();
 						newList->Add(new RE::ExtraSoul(RE::SOUL_LEVEL::kGrand));
 						a_entry->AddExtraList(newList);
 					}
 					return FilterFlag::SoulGem;
+				}
+				else if (!Staves::StaffEnchantManager::GetSingleton()
+							  ->IsInAdvancedStaffEnchanter()) {
+					const auto* soulGem = entryObj->As<RE::TESSoulGem>();
+					if (soulGem && a_entry->GetSoulLevel() != RE::SOUL_LEVEL::kNone) {
+						return FilterFlag::SoulGem;
+					}
 				}
 				return FilterFlag::None;
 			}
