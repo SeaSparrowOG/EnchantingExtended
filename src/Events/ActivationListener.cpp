@@ -120,13 +120,6 @@ namespace Staves
 				enchant->AddChange(RE::TESForm::ChangeFlags::kFlags);
 				continue;
 			}
-
-			enchant->effects = spell->effects;
-			enchant->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
-			enchant->SetDelivery(spell->GetDelivery());
-			enchant->SetCastingType(spell->GetCastingType());
-			enchant->fullName = spell->fullName;
-
 			enchant->formFlags |= RE::TESForm::RecordFlags::kKnown;
 			enchant->AddChange(RE::TESForm::ChangeFlags::kFlags);
 		}
@@ -253,6 +246,14 @@ namespace Staves
 							keySpell->GetName());
 						continue;
 					}
+
+					valueSpell->data.costOverride = chargeCost;
+					valueSpell->data.flags |= RE::EnchantmentItem::EnchantmentFlag::kCostOverride;
+					valueSpell->effects = keySpell->effects;
+					valueSpell->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+					valueSpell->SetDelivery(keySpell->GetDelivery());
+					valueSpell->SetCastingType(keySpell->GetCastingType());
+					valueSpell->fullName = keySpell->fullName;
 
 					auto keyEnchantment = Enchantment(valueSpell);
 					keyEnchantment.charges = charges;
