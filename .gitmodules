@@ -4,3 +4,6 @@
 [submodule "Tools/SKSE-CMakeModules.git"]
 	path = Tools/SKSE-CMakeModules.git
 	url = https://github.com/Exit-9B/SKSE-CMakeModules.git
+[submodule "Extern/CommonlibSSE"]
+	path = Extern/CommonlibSSE
+	url = https://github.com/SeaSparrowOG/CommonLibSSE
