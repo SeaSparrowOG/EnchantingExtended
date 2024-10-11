@@ -250,7 +250,7 @@ namespace Staves
 			}
 		}
 
-		_loggerInfo("Supported spells:");
+		_loggerInfo("Supported spells ({}):", spellEnchantments.size());
 		size_t maxSize = 0;
 		std::vector<std::string> sortedNames{};
 		for (auto& pair : this->spellEnchantments) {
