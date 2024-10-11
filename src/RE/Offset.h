@@ -110,7 +110,8 @@ namespace RE::Offset
 	{
 		inline constexpr REL::ID SwitchSkeleton{ 40476 };
 		inline constexpr REL::ID UseAmmo{ 41243 };
-		inline constexpr REL::ID Vtbl(static_cast<std::uint64_t>(208040));
+		//inline constexpr REL::ID Vtbl(static_cast<std::uint64_t>(208040));
+		//Already in my clib
 	}
 
 	namespace Projectile
