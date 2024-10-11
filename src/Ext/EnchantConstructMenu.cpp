@@ -28,7 +28,7 @@ namespace Ext
 			}
 
 			if (!a_menu->selected.effects.empty()) {
-				if (Settings::INISettings::GetSingleton()->bEnableMultiEnchantments) {
+				if (Settings::INISettings::GetSingleton()->bEnableMultiEnchantments && Staves::StaffEnchantManager::GetSingleton()->IsInAdvancedStaffEnchanter()) {
 					return a_menu->selected.effects[0]->filterFlag.underlying() == filterFlag;
 				}
 				return a_menu->selected.effects[0]->GetName() == entry.get()->GetName();

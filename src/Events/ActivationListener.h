@@ -33,6 +33,7 @@ namespace Staves
 	{
 	public:
 		bool RegisterListener();
+		bool IsInAdvancedStaffEnchanter();
 		bool IsInValidStaffWorkbench();
 		Enchantment GetEnchantmentInfo(const std::vector<RE::EnchantmentItem*>& a_enchantments);
 
@@ -43,7 +44,9 @@ namespace Staves
 		bool ReadSettings();
 
 		bool isInValidStaffWorkbench{ false };
+		bool isInAdvancedStaffEnchanter{ false };
 
+		RE::TESObjectREFR* currentEnchanter{ nullptr };
 		std::unordered_map<RE::SpellItem*, Enchantment> spellEnchantments;
 	};
 }

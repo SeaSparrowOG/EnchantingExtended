@@ -36,6 +36,11 @@ namespace Staves
 		return ReadSettings();
 	}
 
+	bool StaffEnchantManager::IsInAdvancedStaffEnchanter()
+	{
+		return this->isInAdvancedStaffEnchanter;
+	}
+
 	bool StaffEnchantManager::IsInValidStaffWorkbench()
 	{
 		return isInValidStaffWorkbench;
@@ -64,6 +69,11 @@ namespace Staves
 				break;
 			}
 		}
+
+		if (isInAdvancedStaffEnchanter) {
+			response.charges *= 2;
+		}
+
 		return response;
 	}
 
@@ -96,6 +106,9 @@ namespace Staves
 
 		if (!isEntering)
 			continueEvent;
+
+		isInAdvancedStaffEnchanter = eventFurniture->HasKeywordString(
+			"STEN_AdvancedStaffEnchanter");
 
 		auto* playerREF = RE::PlayerCharacter::GetSingleton();
 		for (auto& pair : spellEnchantments) {
