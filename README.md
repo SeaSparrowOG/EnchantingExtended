@@ -1,4 +1,5 @@
-Enables player-made enchantments on arrows and bolts.
+## Enchanting Extended
+Enchanting extended build on Exit-9B's (Parapet's) Ammo Enchanting. In addition to the titular ammo enchanting, enchanting extended also allows you to enchant staves. Requires Ammo Enchanting.
 
 ## Requirements
 * [CMake](https://cmake.org/)
@@ -15,7 +16,7 @@ Enables player-made enchantments on arrows and bolts.
 
 ## Building
 ```
-git clone https://github.com/Exit-9B/AmmoEnchanting
+git clone https://github.com/SeaSparrowOG/EnchantingExtended
 cd AmmoEnchanting
 git submodule init
 git submodule update
