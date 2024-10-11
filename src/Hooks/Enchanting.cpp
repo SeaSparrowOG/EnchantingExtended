@@ -247,12 +247,12 @@ namespace Hooks
 				if (playerEnchantLevel < 25.0f) {
 					playerEnchantLevel = 25.0f;
 				}
-				else if (playerEnchantLevel > 100.0f) {
-					playerEnchantLevel = 100.0f;
+				else if (playerEnchantLevel > 50.0f) {
+					playerEnchantLevel = 50.0f;
 				}
 
 				float soulMultiple = a_menu->createEffectFunctor.soulGemRatio;
-				soulMultiple *= playerEnchantLevel / 90.0f;
+				soulMultiple *= 1.0f - playerEnchantLevel / 60.0f;
 
 				float currCharge = a_menu->createEffectFunctor.enchantmentParams->magnitude;
 				float maxCharge = a_menu->createEffectFunctor.enchantmentParams->maxMagnitude;
@@ -270,10 +270,10 @@ namespace Hooks
 				enchantment->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
 				enchantment->SetDelivery(costliest->baseEffect->data.delivery);
 				enchantment->SetCastingType(costliest->baseEffect->data.castingType);
+				enchantment->data.flags |= RE::EnchantmentItem::EnchantmentFlag::kCostOverride;
 				enchantment->data.chargeTime = chosenTemplate.chargeTime;
 				enchantment->data.chargeOverride = chosenTemplate.charges * chargeMultiple;
 				enchantment->data.costOverride = chosenTemplate.cost * soulMultiple;
-				enchantment->data.flags |= RE::EnchantmentItem::EnchantmentFlag::kCostOverride;
 				return enchantment;
 			}
 			return RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
@@ -408,7 +408,69 @@ namespace Hooks
 	{
 #undef GetObject
 		_SetItemCardInfo(a_categories, a_menu);
-		if (a_categories->data && !a_categories->data->GetObject()->As<RE::TESSoulGem>()) {
+		auto* object = a_categories->data ? a_categories->data->GetObject() : nullptr;
+		auto* selectedWeapon = a_menu->selected.item.get()
+			? a_menu->selected.item.get()->data->GetObject()
+			: nullptr;
+
+		if (selectedWeapon &&
+			(object->As<RE::TESSoulGem>() ||
+				object->HasKeywordByEditorID("STEN_StaffFuel"))) {
+			a_menu->itemInfo.GotoAndStop("SoulGem");
+
+			// Flavor text
+			RE::GFxValue valueSoul;
+			if (!a_menu->itemInfo.GetMember("SoulLevel", &valueSoul)) {
+				return;
+			}
+			if (valueSoul.IsUndefined() || valueSoul.IsNull()) {
+				return;
+			}
+
+			RE::GFxValue valueText;
+			if (!valueSoul.GetMember("text", &valueText)) {
+				return;
+			}
+			if (valueText.IsUndefined() || valueText.IsNull()) {
+				return;
+			}
+
+			valueSoul.SetMember(
+				"text",
+				"A strange stone, pulsing with the warmth of a beating heart.");
+			a_menu->itemInfo.SetMember("SoulLevel", valueSoul);
+
+			// Weight
+			RE::GFxValue valueWeight;
+			if (!a_menu->itemInfo.GetMember("ItemWeightText", &valueWeight)) {
+				return;
+			}
+			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
+				return;
+			}
+			a_menu->itemInfo.SetMember("ItemWeightText", "1");
+
+			// Value
+			RE::GFxValue moneyValue;
+			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
+				return;
+			}
+
+			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
+				return;
+			}
+
+			auto goldValueString = std::to_string(selectedWeapon->GetGoldValue());
+
+			moneyValue.SetText(goldValueString.c_str());
+			a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
+		}
+		else if (!selectedWeapon && object &&
+			!object->As<RE::TESSoulGem>() &&
+			!object->IsWeapon() &&
+			!object->IsArmor() &&
+			!object->IsAmmo()) {
+
 			RE::GFxValue val;
 			if (!a_menu->itemInfo.GetMember("LastUpdateObj", &val)) {
 				return;
@@ -460,13 +522,6 @@ namespace Hooks
 			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
 				return;
 			}
-
-			auto itemValue = a_categories->data->GetObject()->GetWeight();
-			std::ostringstream out;
-			out << std::fixed << std::setprecision(2) << itemValue;
-			std::string itemValueString = out.str();
-
-			valueWeight.SetText(itemValueString.c_str());
 			a_menu->itemInfo.SetMember("ItemWeightText", "1");
 
 			// Value
