@@ -470,7 +470,7 @@ namespace Hooks
 			std::string itemValueString = out.str();
 
 			valueWeight.SetText(itemValueString.c_str());
-			a_menu->itemInfo.SetMember("ItemWeightText", valueWeight);
+			a_menu->itemInfo.SetMember("ItemWeightText", "1");
 
 			// Value
 			RE::GFxValue moneyValue;
