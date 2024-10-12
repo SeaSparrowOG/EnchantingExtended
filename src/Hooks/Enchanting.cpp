@@ -413,6 +413,9 @@ namespace Hooks
 			? a_menu->selected.item.get()->data->GetObject()
 			: nullptr;
 
+		if (!Staves::StaffEnchantManager::GetSingleton()->IsInValidStaffWorkbench()) {
+			return;
+		}
 		if (!object->HasKeywordByEditorID("STEN_StaffFuel") && !object->IsSoulGem()) {
 			return;
 		}
