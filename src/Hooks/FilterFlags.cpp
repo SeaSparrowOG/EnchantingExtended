@@ -584,13 +584,15 @@ namespace Hooks
 		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
 		const auto disallowEnchanting = defaultObjects->GetObject<RE::BGSKeyword>(
 			RE::DEFAULT_OBJECT::kKeywordDisallowEnchanting);
+		auto staff = object->As<RE::TESObjectWEAP>();
+		bool isStaff = staff ? staff->IsStaff() : false;
 
-		const auto staff = object->As<RE::TESObjectWEAP>();
-		bool isStaffSelected = staff ? staff->IsStaff() : false;
-		bool inStaffEnchanter = Staves::StaffEnchantManager::GetSingleton()->IsInValidStaffWorkbench();
+		if (Staves::StaffEnchantManager::GetSingleton()->IsInValidStaffWorkbench()) {
+			bool isSoulGem = object ? object->IsSoulGem() : false;
+			bool isFuel = object ? object->HasKeywordByEditorID("STEN_StaffFuel") : false;
+			bool hasSoul = a_entry->GetSoulLevel() != RE::SOUL_LEVEL::kNone ? true : false;
 
-		if (inStaffEnchanter) {
-			if (isStaffSelected) {
+			if (isStaff) {
 				if (disallowEnchanting && staff->HasKeyword(disallowEnchanting)) {
 					return FilterFlag::None;
 				}
@@ -599,28 +601,27 @@ namespace Hooks
 				}
 				return FilterFlag::None;
 			}
-			else if (const auto entryObj = a_entry->GetObject()) {
-				if (Staves::StaffEnchantManager::GetSingleton()->IsInAdvancedStaffEnchanter() &&
-					entryObj->HasKeywordByEditorID("STEN_StaffFuel")) {
-					if (a_entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
+
+			if (Staves::StaffEnchantManager::GetSingleton()->IsInAdvancedStaffEnchanter()) {
+				if (isFuel) {
+					if (!hasSoul) {
 						auto* newList = new RE::ExtraDataList();
 						newList->Add(new RE::ExtraSoul(RE::SOUL_LEVEL::kGrand));
 						a_entry->AddExtraList(newList);
 					}
 					return FilterFlag::SoulGem;
 				}
-				else if (!Staves::StaffEnchantManager::GetSingleton()
-							  ->IsInAdvancedStaffEnchanter()) {
-					const auto* soulGem = entryObj->As<RE::TESSoulGem>();
-					if (soulGem && a_entry->GetSoulLevel() != RE::SOUL_LEVEL::kNone) {
-						return FilterFlag::SoulGem;
-					}
+				else if (isSoulGem && hasSoul &&
+					Settings::INISettings::GetSingleton()->bUseSoulGemsForStaves) {
+					return FilterFlag::SoulGem;
 				}
-				return FilterFlag::None;
 			}
 			else {
-				return FilterFlag::None;
+				if (isSoulGem && hasSoul) {
+					return FilterFlag::SoulGem;
+				}
 			}
+			return FilterFlag::None;
 		}
 		else if (const auto armor = object->As<RE::TESObjectARMO>()) {
 			if (disallowEnchanting && armor->HasKeyword(disallowEnchanting)) {
@@ -638,7 +639,7 @@ namespace Hooks
 				RE::Offset::UnarmedWeapon
 			};
 
-			if (isStaffSelected ||
+			if (isStaff ||
 				disallowEnchanting && weapon->HasKeyword(disallowEnchanting) ||
 				weapon == *unarmedWeapon.get() ||
 				(weapon->weaponData.flags.all(RE::TESObjectWEAP::Data::Flag::kNonPlayable))) {

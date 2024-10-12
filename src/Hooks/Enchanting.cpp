@@ -416,7 +416,7 @@ namespace Hooks
 		if (!Staves::StaffEnchantManager::GetSingleton()->IsInValidStaffWorkbench()) {
 			return;
 		}
-		if (!object->HasKeywordByEditorID("STEN_StaffFuel") && !object->IsSoulGem()) {
+		if (!object->HasKeywordByEditorID("STEN_StaffFuel") || object->IsSoulGem()) {
 			return;
 		}
 		if (selectedWeapon && !a_menu->selected.effects.empty() &&
