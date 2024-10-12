@@ -19,6 +19,7 @@ namespace Settings
 		bool bStaffChargeEnabled;
 		bool bEnableMultiEnchantments;
 		bool bUseSoulGemsForStaves;
+		bool bUseStaffFuelDescription;
 		float fStaffChargeMult;
 		float fAmmoChargeMult;
 		float fAmmoEffectCostMult;

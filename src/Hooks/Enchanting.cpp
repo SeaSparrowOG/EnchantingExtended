@@ -413,11 +413,22 @@ namespace Hooks
 			? a_menu->selected.item.get()->data->GetObject()
 			: nullptr;
 
-		if (selectedWeapon &&
-			(object->As<RE::TESSoulGem>() ||
-				object->HasKeywordByEditorID("STEN_StaffFuel"))) {
-			a_menu->itemInfo.GotoAndStop("SoulGem");
+		if (!object->HasKeywordByEditorID("STEN_StaffFuel") && !object->IsSoulGem()) {
+			return;
+		}
+		if (selectedWeapon && !a_menu->selected.effects.empty() &&
+			a_menu->selected.soulGem.get()) {
+			return;
+		}
+		if (selectedWeapon && !(object->HasKeywordByEditorID("STEN_StaffFuel") || object->IsSoulGem())) {
+			return;
+		}
 
+		a_menu->itemInfo.GotoAndStop("SoulGem");
+
+		if (Settings::INISettings::GetSingleton()->bUseStaffFuelDescription &&
+			!selectedWeapon && (object->HasKeywordByEditorID("STEN_StaffFuel") ||
+				object->IsSoulGem())) {
 			// Flavor text
 			RE::GFxValue valueSoul;
 			if (!a_menu->itemInfo.GetMember("SoulLevel", &valueSoul)) {
@@ -427,117 +438,42 @@ namespace Hooks
 				return;
 			}
 
-			RE::GFxValue valueText;
-			if (!valueSoul.GetMember("text", &valueText)) {
-				return;
-			}
-			if (valueText.IsUndefined() || valueText.IsNull()) {
-				return;
-			}
-
-			valueSoul.SetMember(
-				"text",
-				"A strange stone, pulsing with the warmth of a beating heart.");
+			valueSoul.SetText("A strange stone, pulsing with the warmth of a beating heart.");
 			a_menu->itemInfo.SetMember("SoulLevel", valueSoul);
-
-			// Weight
-			RE::GFxValue valueWeight;
-			if (!a_menu->itemInfo.GetMember("ItemWeightText", &valueWeight)) {
-				return;
-			}
-			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
-				return;
-			}
-			a_menu->itemInfo.SetMember("ItemWeightText", "1");
-
-			// Value
-			RE::GFxValue moneyValue;
-			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
-				return;
-			}
-
-			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
-				return;
-			}
-
-			auto goldValueString = std::to_string(selectedWeapon->GetGoldValue());
-
-			moneyValue.SetText(goldValueString.c_str());
-			a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
 		}
-		else if (!selectedWeapon && object &&
-			!object->As<RE::TESSoulGem>() &&
-			!object->IsWeapon() &&
-			!object->IsArmor() &&
-			!object->IsAmmo()) {
 
-			RE::GFxValue val;
-			if (!a_menu->itemInfo.GetMember("LastUpdateObj", &val)) {
-				return;
-			}
-			if (val.IsUndefined() || val.IsNull()) {
-				return;
-			}
-
-			// Object value type (must be 12)
-			RE::GFxValue valueType;
-			if (!val.GetMember("type", &valueType)) {
-				return;
-			}
-			if (valueType.IsUndefined() || valueType.IsNull()) {
-				return;
-			}
-
-			val.SetMember("type", 12);
-			a_menu->itemInfo.SetMember("LastUpdateObj", val);
-			a_menu->itemInfo.GotoAndStop("SoulGem");
-
-			// Flavor text
-			RE::GFxValue valueSoul;
-			if (!a_menu->itemInfo.GetMember("SoulLevel", &valueSoul)) {
-				return;
-			}
-			if (valueSoul.IsUndefined() || valueSoul.IsNull()) {
-				return;
-			}
-
-			RE::GFxValue valueText;
-			if (!valueSoul.GetMember("text", &valueText)) {
-				return;
-			}
-			if (valueText.IsUndefined() || valueText.IsNull()) {
-				return;
-			}
-
-			valueSoul.SetMember(
-				"text",
-				"A strange stone, pulsing with the warmth of a beating heart.");
-			a_menu->itemInfo.SetMember("SoulLevel", valueSoul);
-
-			// Weight
-			RE::GFxValue valueWeight;
-			if (!a_menu->itemInfo.GetMember("ItemWeightText", &valueWeight)) {
-				return;
-			}
-			if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
-				return;
-			}
-			a_menu->itemInfo.SetMember("ItemWeightText", "1");
-
-			// Value
-			RE::GFxValue moneyValue;
-			if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
-				return;
-			}
-
-			if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
-				return;
-			}
-
-			auto goldValueString = std::to_string(a_categories->data->GetObject()->GetGoldValue());
-
-			moneyValue.SetText(goldValueString.c_str());
-			a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
+		// Weight
+		RE::GFxValue valueWeight;
+		if (!a_menu->itemInfo.GetMember("ItemWeightText", &valueWeight)) {
+			return;
 		}
+		if (valueWeight.IsUndefined() || valueWeight.IsNull()) {
+			return;
+		}
+
+		if (selectedWeapon) {
+			valueWeight.SetText("8");
+		}
+		else {
+			valueWeight.SetText("1");
+		}
+		a_menu->itemInfo.SetMember("ItemWeightText", valueWeight);
+
+		// Value
+		RE::GFxValue moneyValue;
+		if (!a_menu->itemInfo.GetMember("ItemValueText", &moneyValue)) {
+			return;
+		}
+		if (moneyValue.IsUndefined() || moneyValue.IsNull()) {
+			return;
+		}
+
+		if (selectedWeapon) {
+			moneyValue.SetText(std::to_string(selectedWeapon->GetGoldValue()).c_str());
+		}
+		else {
+			moneyValue.SetText(std::to_string(object->GetGoldValue()).c_str());
+		}
+		a_menu->itemInfo.SetMember("ItemValueText", moneyValue);
 	}
 }
